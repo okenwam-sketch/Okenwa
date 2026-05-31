@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="My Routine">
+<meta name="theme-color" content="#0a0a0a">
+<title>My Routine</title>
+<style>
+:root {
+  --bg: #0a0a0a;
+  --bg2: #161616;
+  --bg3: #202020;
+  --border: rgba(255,255,255,0.09);
+  --border2: rgba(255,255,255,0.16);
+  --text: #f0ede8;
+  --muted: rgba(240,237,232,0.5);
+  --dim: rgba(240,237,232,0.28);
+  --purple: #8b7cf8;
+  --green: #3ecf8e;
+  --amber: #f5a623;
+  --blue: #4da6ff;
+  --coral: #ff7070;
+  --gray: #888;
+  --safe-top: env(safe-area-inset-top, 44px);
+  --safe-bottom: env(safe-area-inset-bottom, 20px);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; background: var(--bg); font-family: -apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif; color: var(--text); }
+.app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+.status-bar { height: var(--safe-top); background: var(--bg); flex-shrink: 0; }
+.header { padding: 10px 18px 0; flex-shrink: 0; }
+.header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.header-title { font-size: 28px; font-weight: 800; letter-spacing: -0.8px; }
+.header-title span { color: var(--purple); }
+.date-pill { background: var(--bg3); border: 0.5px solid var(--border2); border-radius: 20px; padding: 5px 12px; font-size: 11px; color: var(--muted); font-weight: 600; letter-spacing: 0.4px; }
+.day-tabs { display: flex; gap: 5px; padding: 0 18px 12px; overflow-x: auto; flex-shrink: 0; scrollbar-width: none; -ms-overflow-style: none; }
+.day-tabs::-webkit-scrollbar { display: none; }
+.day-tab { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 9px 13px; border-radius: 14px; border: 0.5px solid var(--border); background: var(--bg2); cursor: pointer; min-width: 52px; }
+.day-tab.active { background: var(--purple); border-color: var(--purple); }
+.day-tab .dn { font-size: 11px; font-weight: 700; color: var(--muted); letter-spacing: 0.6px; }
+.day-tab.active .dn { color: #fff; }
+.day-tab .dd { width: 5px; height: 5px; border-radius: 50%; background: var(--purple); opacity: 0; }
+.day-tab.today .dd { opacity: 1; }
+.day-tab.active .dd { background: rgba(255,255,255,0.6); opacity: 1; }
+.view-switch { display: flex; margin: 0 18px 12px; background: var(--bg2); border-radius: 12px; padding: 3px; border: 0.5px solid var(--border); flex-shrink: 0; }
+.vsw { flex: 1; text-align: center; padding: 8px 4px; border-radius: 10px; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; letter-spacing: -0.1px; }
+.vsw.active { background: var(--bg3); color: var(--text); border: 0.5px solid var(--border2); }
+.scroll-area { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; padding: 0 14px; scrollbar-width: none; }
+.scroll-area::-webkit-scrollbar { display: none; }
+.bottom-pad { height: calc(var(--safe-bottom) + 16px); flex-shrink: 0; }
+.day-label { font-size: 11px; color: var(--dim); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 10px; padding-top: 2px; font-weight: 600; }
+.block { display: flex; gap: 10px; margin-bottom: 5px; }
+.time-col { width: 62px; flex-shrink: 0; padding-top: 11px; }
+.time-text { font-size: 10.5px; color: var(--dim); text-align: right; line-height: 1.3; font-weight: 500; }
+.block-line { display: flex; flex-direction: column; align-items: center; width: 16px; flex-shrink: 0; }
+.block-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; margin-top: 13px; }
+.block-trail { flex: 1; width: 1px; background: var(--border); margin-top: 3px; min-height: 8px; }
+.block-card { flex: 1; background: var(--bg2); border: 0.5px solid var(--border); border-radius: 13px; padding: 10px 12px; overflow: hidden; position: relative; }
+.block-card.col { border-left-width: 2.5px; border-left-style: solid; }
+.block-header { display: flex; align-items: flex-start; gap: 7px; }
+.block-emoji { font-size: 15px; flex-shrink: 0; line-height: 1.3; }
+.block-info { flex: 1; min-width: 0; }
+.block-title { font-size: 13.5px; font-weight: 600; color: var(--text); line-height: 1.3; }
+.block-sub { font-size: 11.5px; color: var(--muted); line-height: 1.4; margin-top: 2px; }
+.block-tag { font-size: 10px; padding: 2px 7px; border-radius: 20px; font-weight: 600; white-space: nowrap; flex-shrink: 0; margin-top: 2px; }
+.targets-header { margin-bottom: 12px; }
+.prog-row { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 6px; font-weight: 500; }
+.prog-wrap { background: var(--bg3); border-radius: 20px; height: 5px; overflow: hidden; }
+.prog-bar { height: 100%; background: var(--purple); border-radius: 20px; transition: width 0.4s ease; }
+.cat-head { font-size: 11px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: var(--dim); margin: 14px 0 7px; display: flex; align-items: center; gap: 6px; }
+.cat-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.titem { display: flex; align-items: flex-start; gap: 10px; padding: 11px 12px; background: var(--bg2); border: 0.5px solid var(--border); border-radius: 12px; margin-bottom: 5px; cursor: pointer; transition: opacity 0.2s; }
+.titem:active { opacity: 0.7; }
+.titem.done { opacity: 0.45; }
+.tchk { width: 21px; height: 21px; border-radius: 6px; border: 1.5px solid var(--border2); flex-shrink: 0; display: flex; align-items: center; justify-content: center; margin-top: 1px; transition: all 0.2s; }
+.tchk.done { background: var(--purple); border-color: var(--purple); }
+.tchk-inner { display: none; width: 11px; height: 8px; }
+.tchk.done .tchk-inner { display: block; }
+.ttext { font-size: 13px; color: var(--text); line-height: 1.45; }
+.ttext.done { text-decoration: line-through; color: var(--muted); }
+.sat-intro { font-size: 12px; color: var(--muted); margin-bottom: 14px; line-height: 1.6; background: var(--bg2); border: 0.5px solid var(--border); border-radius: 12px; padding: 12px; border-left: 2.5px solid var(--purple); }
+.sat-block { background: var(--bg2); border: 0.5px solid var(--border); border-radius: 13px; padding: 13px 14px; margin-bottom: 8px; }
+.sat-block-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
+.sat-item { font-size: 12.5px; color: var(--muted); padding: 6px 0; border-bottom: 0.5px solid var(--border); line-height: 1.45; display: flex; gap: 8px; }
+.sat-item:last-child { border-bottom: none; padding-bottom: 0; }
+.sat-bull { color: var(--purple); flex-shrink: 0; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="status-bar"></div>
+  <div class="header">
+    <div class="header-top">
+      <div class="header-title">My <span>Routine</span></div>
+      <div class="date-pill" id="datePill"></div>
+    </div>
+  </div>
+  <div class="day-tabs" id="dayTabs"></div>
+  <div class="view-switch">
+    <div class="vsw active" id="vsw-schedule" onclick="switchView('schedule')">Schedule</div>
+    <div class="vsw" id="vsw-targets" onclick="switchView('targets')">Targets</div>
+    <div class="vsw" id="vsw-saturday" onclick="switchView('saturday')">Saturday</div>
+  </div>
+  <div class="scroll-area" id="mainArea"></div>
+  <div class="bottom-pad"></div>
+</div>
+<script>
+const DAYS=['sun','mon','tue','wed','thu','fri','sat'];
+const DNAMES=['SUN','MON','TUE','WED','THU','FRI','SAT'];
+const C={purple:'#8b7cf8',green:'#3ecf8e',amber:'#f5a623',blue:'#4da6ff',coral:'#ff7070',gray:'#666'};
+const CS={purple:'rgba(139,124,248,0.14)',green:'rgba(62,207,142,0.13)',amber:'rgba(245,166,35,0.13)',blue:'rgba(77,166,255,0.13)',coral:'rgba(255,112,112,0.13)',gray:'rgba(120,120,120,0.1)'};
+const TL={purple:'Mind & body',green:'Music',amber:'Business',blue:'9-5',coral:'Travel',gray:''};
+
+const SCH={
+  mon:{label:'Monday — WFH (finish ~4pm)',blocks:[
+    {t:'5:00 AM',e:'🌅',ti:'Wake up + 20 min run',s:'Get the blood moving. No negotiation.',c:'purple'},
+    {t:'5:25 AM',e:'🧠',ti:'Mind clear meditation',s:'10 min — empty the noise, just breathe',c:'purple'},
+    {t:'5:35 AM',e:'👁️',ti:'Vision meditation',s:'10 min — O2 stage, crowd, the dream. Feel it.',c:'purple'},
+    {t:'5:45 AM',e:'📖',ti:'Reading',s:'45 min — elevate your thinking',c:'green'},
+    {t:'6:30 AM',e:'☕',ti:'Shower + breakfast + prep',s:'Fuel clean, get sharp',c:'gray'},
+    {t:'7:00 AM',e:'🎵',ti:'Music session',s:'2 hrs — record, write, produce. Mornings are gold.',c:'green'},
+    {t:'9:00 AM',e:'💼',ti:'9-5 work',s:'Deep work block — full focus',c:'blue'},
+    {t:'12:30 PM',e:'🏋️',ti:'Gym',s:'1 hr — midday reset. Keep the body strong.',c:'purple'},
+    {t:'1:30 PM',e:'💼',ti:'9-5 work (cont.)',s:'Afternoon tasks, wrap clean by 4pm',c:'blue'},
+    {t:'4:00 PM',e:'🏢',ti:'Business block',s:'2 hrs — events, CBD, energy drink strategy',c:'amber'},
+    {t:'6:00 PM',e:'🍽️',ti:'Dinner + decompress',s:'Eat well, switch off the grind brain',c:'gray'},
+    {t:'7:00 PM',e:'📝',ti:'Review + prep tomorrow',s:'30 min — 3 priorities for Tuesday',c:'gray'},
+    {t:'10:00 PM',e:'🌙',ti:'Sleep',s:'7 hours. Recovery is discipline.',c:'gray'},
+  ]},
+  tue:{label:'Tuesday — Office day (train 6:18)',blocks:[
+    {t:'5:00 AM',e:'🌅',ti:'Wake up',s:'Train day — move fast, stay focused',c:'gray'},
+    {t:'5:05 AM',e:'🧠',ti:'Mind clear meditation',s:'10 min',c:'purple'},
+    {t:'5:15 AM',e:'👁️',ti:'Vision meditation',s:'10 min — lock in before the world hits',c:'purple'},
+    {t:'5:25 AM',e:'📖',ti:'Read + goals review',s:'20 min — sharpen the mind',c:'green'},
+    {t:'5:45 AM',e:'☕',ti:'Shower + breakfast + pack',s:'Leave house by 6am sharp',c:'gray'},
+    {t:'6:00 AM',e:'🚶',ti:'Leave house',s:'Walk to station',c:'coral'},
+    {t:'6:18 AM',e:'🚂',ti:'Train to London',s:'Audiobook, plan the day — no scrolling',c:'coral'},
+    {t:'8:00 AM',e:'💼',ti:'Office — morning block',s:'Show up sharp. Make your presence count.',c:'blue'},
+    {t:'12:30 PM',e:'🏋️',ti:'Gym at work',s:'1.5 hrs — your physical edge. Push it hard.',c:'purple'},
+    {t:'2:00 PM',e:'💼',ti:'Office — afternoon block',s:'Clear your task list before home time',c:'blue'},
+    {t:'~6:00 PM',e:'🚂',ti:'Commute home',s:'Voice note music ideas, review the day',c:'coral'},
+    {t:'~8:00 PM',e:'🎵',ti:'Music session',s:'1 hr — even 1 hour moves the needle',c:'green'},
+    {t:'9:00 PM',e:'🍽️',ti:'Dinner + wind down',s:'Eat, prep tomorrow, screen down',c:'gray'},
+    {t:'10:00 PM',e:'🌙',ti:'Sleep',s:'7 hours.',c:'gray'},
+  ]},
+  wed:{label:'Wednesday — WFH (finish ~4pm)',blocks:[
+    {t:'5:00 AM',e:'🌅',ti:'Wake up + 20 min run',s:'Mid-week reset. Keep the energy up.',c:'purple'},
+    {t:'5:25 AM',e:'🧠',ti:'Mind clear meditation',s:'10 min',c:'purple'},
+    {t:'5:35 AM',e:'👁️',ti:'Vision meditation',s:'10 min — feed the dream every single day',c:'purple'},
+    {t:'5:45 AM',e:'📖',ti:'Reading',s:'45 min — knowledge is compounding',c:'green'},
+    {t:'6:30 AM',e:'☕',ti:'Shower + breakfast',s:'Fuel up',c:'gray'},
+    {t:'7:00 AM',e:'🏢',ti:'Business block',s:'2 hrs — events: venues, promo, logistics, CBD',c:'amber'},
+    {t:'9:00 AM',e:'💼',ti:'9-5 work',s:'Full focus. Protect this block.',c:'blue'},
+    {t:'12:30 PM',e:'🏋️',ti:'Gym',s:'1 hr — stay consistent',c:'purple'},
+    {t:'1:30 PM',e:'💼',ti:'9-5 work (cont.)',s:'Wrap by 4pm clean',c:'blue'},
+    {t:'4:00 PM',e:'🎵',ti:'Music session',s:'2 hrs — record, refine. This is your legacy.',c:'green'},
+    {t:'6:00 PM',e:'🍽️',ti:'Dinner + decompress',s:'Earn the rest',c:'gray'},
+    {t:'10:00 PM',e:'🌙',ti:'Sleep',s:'7 hours.',c:'gray'},
+  ]},
+  thu:{label:'Thursday — Office day (train 6:18)',blocks:[
+    {t:'5:00 AM',e:'🌅',ti:'Wake up',s:'Second office day. Same standard.',c:'gray'},
+    {t:'5:05 AM',e:'🧠',ti:'Mind clear meditation',s:'10 min',c:'purple'},
+    {t:'5:15 AM',e:'👁️',ti:'Vision meditation',s:'10 min — remind yourself what this is all for',c:'purple'},
+    {t:'5:25 AM',e:'📖',ti:'Read + goals review',s:'20 min',c:'green'},
+    {t:'5:45 AM',e:'☕',ti:'Shower + breakfast + pack',s:'Leave house by 6am',c:'gray'},
+    {t:'6:00 AM',e:'🚶',ti:'Leave house',s:'Walk to station',c:'coral'},
+    {t:'6:18 AM',e:'🚂',ti:'Train to London',s:'Plan your day. Build mentally on the commute.',c:'coral'},
+    {t:'8:00 AM',e:'💼',ti:'Office — morning block',s:'Bring the energy. Strong output.',c:'blue'},
+    {t:'12:30 PM',e:'🏋️',ti:'Gym at work',s:'1.5 hrs — second gym session of the week',c:'purple'},
+    {t:'2:00 PM',e:'💼',ti:'Office — afternoon block',s:'Clear the plate before the weekend',c:'blue'},
+    {t:'~6:00 PM',e:'🚂',ti:'Commute home',s:'Voice note ideas, plan Friday hustle',c:'coral'},
+    {t:'~8:00 PM',e:'🏢',ti:'Business check-in',s:'1 hr — events, CBD follow-ups, quick wins',c:'amber'},
+    {t:'9:00 PM',e:'🍽️',ti:'Dinner + wind down',s:'Rest up for the Friday finish',c:'gray'},
+    {t:'10:00 PM',e:'🌙',ti:'Sleep',s:'7 hours.',c:'gray'},
+  ]},
+  fri:{label:'Friday — WFH (finish ~4pm)',blocks:[
+    {t:'5:00 AM',e:'🌅',ti:'Wake up + 20 min run',s:'End the work week strong. No excuses.',c:'purple'},
+    {t:'5:25 AM',e:'🧠',ti:'Mind clear meditation',s:'10 min',c:'purple'},
+    {t:'5:35 AM',e:'👁️',ti:'Vision meditation',s:'10 min — you are getting closer every week',c:'purple'},
+    {t:'5:45 AM',e:'📖',ti:'Reading',s:'45 min — something that challenges your thinking',c:'green'},
+    {t:'6:30 AM',e:'☕',ti:'Shower + breakfast',s:'Friday energy',c:'gray'},
+    {t:'7:00 AM',e:'🎵',ti:'Music session',s:'2 hrs — best creative session of the week.',c:'green'},
+    {t:'9:00 AM',e:'💼',ti:'9-5 work',s:'Close out the week strong',c:'blue'},
+    {t:'12:30 PM',e:'🏋️',ti:'Gym',s:'1 hr — close the week physically',c:'purple'},
+    {t:'1:30 PM',e:'💼',ti:'9-5 wrap + week review',s:'Clear all open items by 4pm',c:'blue'},
+    {t:'4:00 PM',e:'🏢',ti:'Business strategy block',s:'2 hrs — weekly review: events, CBD, music biz',c:'amber'},
+    {t:'6:00 PM',e:'🍽️',ti:'Dinner + decompress',s:'You earned it. Eat well.',c:'gray'},
+    {t:'7:00 PM',e:'📝',ti:'Prep Saturday session',s:'30 min — list agenda for Saturday planning',c:'gray'},
+    {t:'10:00 PM',e:'🌙',ti:'Sleep',s:'7 hours. Big Saturday ahead.',c:'gray'},
+  ]},
+  sat:{label:'Saturday — Full hustle + planning day',blocks:[
+    {t:'5:00 AM',e:'🌅',ti:'Wake up + 20 min run',s:'Saturday belongs to you. Start like a champion.',c:'purple'},
+    {t:'5:25 AM',e:'🧠',ti:'Mind clear meditation',s:'10 min',c:'purple'},
+    {t:'5:35 AM',e:'👁️',ti:'Vision meditation',s:'10 min — O2 stage. Feel the crowd. Make it real.',c:'purple'},
+    {t:'5:45 AM',e:'📖',ti:'Reading',s:'1 hr — no interruptions, full focus',c:'green'},
+    {t:'6:45 AM',e:'☕',ti:'Breakfast + prep',s:'Fuel for a big day',c:'gray'},
+    {t:'7:30 AM',e:'🎵',ti:'Music session — main block',s:'2 hrs — biggest creative session of the week',c:'green'},
+    {t:'9:30 AM',e:'📋',ti:'Saturday power session',s:'2 hrs — roadmaps, targets, financial sign-off',c:'amber'},
+    {t:'11:30 AM',e:'🏋️',ti:'Gym',s:'1.5 hrs — full session, no rush',c:'purple'},
+    {t:'1:00 PM',e:'🍽️',ti:'Lunch + recovery',s:'Eat clean. Walk. Reset.',c:'gray'},
+    {t:'2:00 PM',e:'🎵',ti:'Music business block',s:'2 hrs — promo, pitching, collabs, content',c:'green'},
+    {t:'4:00 PM',e:'👥',ti:'Free time',s:'Recharge. Good energy only.',c:'gray'},
+    {t:'10:00 PM',e:'🌙',ti:'Sleep',s:'You went hard. Rest.',c:'gray'},
+  ]},
+  sun:{label:'Sunday — Rest + light planning',blocks:[
+    {t:'7:00 AM',e:'🌅',ti:'Later wake up',s:'Body needs recovery. Let it.',c:'gray'},
+    {t:'7:15 AM',e:'🏃',ti:'20 min easy run',s:'Light movement, clear the head',c:'purple'},
+    {t:'7:40 AM',e:'🧠',ti:'Mind clear meditation',s:'10 min',c:'purple'},
+    {t:'7:50 AM',e:'👁️',ti:'Vision meditation',s:'10 min — end the week right, start next right',c:'purple'},
+    {t:'8:00 AM',e:'☕',ti:'Slow breakfast',s:'No rush. Be present.',c:'gray'},
+    {t:'9:00 AM',e:'📖',ti:'Reading',s:'1 hr — invest in your mind on rest days too',c:'green'},
+    {t:'10:00 AM',e:'📝',ti:'Light planning',s:'1 hr — review week, confirm Monday priorities',c:'amber'},
+    {t:'11:00 AM',e:'👥',ti:'Free / family / rest',s:'Full rest mode. Let the mind breathe.',c:'gray'},
+    {t:'8:00 PM',e:'📝',ti:'Monday prep',s:'30 min — set alarm, write 3 goals',c:'gray'},
+    {t:'10:00 PM',e:'🌙',ti:'Sleep',s:'5am tomorrow. Rest earns the result.',c:'gray'},
+  ]}
+};
+
+const TARGETS=[
+  {cat:'Music 🎵',color:'green',items:['Record or finish 1 track / demo','Write lyrics for at least 2 sessions','Listen back + notes on last recordings','Send 1 collab message or pitch','Post 1 piece of music content online']},
+  {cat:'Events Business 🎉',color:'amber',items:['Progress 1 venue conversation','Review promo / ticket strategy','Create or schedule 2 social posts','Follow up on open partnerships','Update event budget / financials']},
+  {cat:'CBD & Energy Drink ⚡',color:'coral',items:['Complete 1 business task','Review weekly revenue / pipeline','Post 1 product content piece','Check in with partners or stockists','1 hr research: market + competitors']},
+  {cat:'9-5 Job 💼',color:'blue',items:['Clear inbox to zero by Friday','Deliver 3 high-quality outputs','Communicate progress to manager','Learn 1 new skill relevant to work','Leave each day with tomorrow planned']},
+  {cat:'Fitness 🏋️',color:'purple',items:['4-5 training sessions completed','Run at least 3 times this week','Track nutrition 5 days','Sleep 10pm–5am every night','Zero missed morning routines']},
+  {cat:'Mind & Growth 🧠',color:'purple',items:['Both meditations every day (14 total)','Read minimum 3 hours this week','Journal at least 3 evenings','No smoking — full 7 days','One moment of gratitude daily']},
+];
+
+const SATBLOCKS=[
+  {title:'🎵 Music roadmap',items:["On track with this month's music target?","Next release / demo milestone?","Collabs or pitches to action this week?","Anything blocking progress — remove it now"]},
+  {title:'🎉 Events business review',items:["Update event tracker: venue, date, revenue","Open tasks — assign deadlines now","Review promo plan for next event","Spend to approve? Sign off here or it doesn't happen"]},
+  {title:'⚡ CBD & energy drink',items:["Revenue / sales update","Stock, supplier or product decisions?","Marketing actions — approve or defer","Financial sign-off: what gets spent this week?"]},
+  {title:'💰 Financial planning',items:["Review last week's actual spend vs plan","Set this week's budget by category","Anything not on this list does not get spent","Check savings target — on track?","Any big purchases coming — plan ahead"]},
+  {title:'🎯 Weekly targets reset',items:["Review last week — what did you hit?","Set this week's top 3 priorities per area","Any area falling behind — fix the plan","Write the one outcome that makes this week a win"]},
+  {title:'❤️ Personal check-in',items:["How is your energy and focus?","Are the habits holding? Meditation, run, sleep?","Anything pulling attention from goals?","Every week of discipline compounds — keep going"]},
+];
+
+let curDay=DAYS[new Date().getDay()];
+let curView='schedule';
+let checks={};
+try{checks=JSON.parse(localStorage.getItem('rc')||'{}');}catch(e){}
+function save(){try{localStorage.setItem('rc',JSON.stringify(checks));}catch(e){}}
+
+function init(){
+  const now=new Date();
+  document.getElementById('datePill').textContent=now.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}).toUpperCase();
+  renderTabs();renderMain();
+}
+function renderTabs(){
+  const today=new Date().getDay();
+  document.getElementById('dayTabs').innerHTML=DAYS.map((d,i)=>`
+    <div class="day-tab ${d===curDay?'active':''} ${i===today?'today':''}" onclick="selDay('${d}')">
+      <div class="dn">${DNAMES[i]}</div>
+      <div class="dd"></div>
+    </div>`).join('');
+}
+function selDay(d){curDay=d;renderTabs();if(curView==='schedule')renderMain();}
+function switchView(v){
+  curView=v;
+  ['schedule','targets','saturday'].forEach(x=>{
+    document.getElementById('vsw-'+x).classList.toggle('active',x===v);
+  });
+  renderMain();
+}
+function renderMain(){
+  if(curView==='schedule')renderSch();
+  else if(curView==='targets')renderTar();
+  else renderSat();
+}
+function renderSch(){
+  const day=SCH[curDay];
+  const a=document.getElementById('mainArea');
+  a.innerHTML=`<div class="day-label">${day.label}</div>`+
+    day.blocks.map((b,i)=>{
+      const last=i===day.blocks.length-1;
+      const tag=TL[b.c];
+      return `<div class="block">
+        <div class="time-col"><div class="time-text">${b.t}</div></div>
+        <div class="block-line">
+          <div class="block-dot" style="background:${C[b.c]}"></div>
+          ${!last?'<div class="block-trail"></div>':''}
+        </div>
+        <div class="block-card${b.c!=='gray'?' col':''}" style="${b.c!=='gray'?`border-left-color:${C[b.c]}`:''}">
+          <div class="block-header">
+            <span class="block-emoji">${b.e}</span>
+            <div class="block-info">
+              <div class="block-title">${b.ti}${tag?` <span class="block-tag" style="background:${CS[b.c]};color:${C[b.c]}">${tag}</span>`:''}</div>
+              <div class="block-sub">${b.s}</div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+}
+function renderTar(){
+  const total=TARGETS.reduce((a,c)=>a+c.items.length,0);
+  const done=Object.values(checks).filter(Boolean).length;
+  const pct=Math.round((done/total)*100);
+  const a=document.getElementById('mainArea');
+  a.innerHTML=`<div class="targets-header">
+    <div class="prog-row"><span>Weekly progress</span><span>${done}/${total} done</span></div>
+    <div class="prog-wrap"><div class="prog-bar" style="width:${pct}%"></div></div>
+  </div>`+
+  TARGETS.map((cat,ci)=>`
+    <div class="cat-head"><div class="cat-dot" style="background:${C[cat.color]}"></div>${cat.cat}</div>`+
+    cat.items.map((item,ii)=>{
+      const key=`${ci}-${ii}`;
+      const done=!!checks[key];
+      return `<div class="titem${done?' done':''}" onclick="tog('${key}')">
+        <div class="tchk${done?' done':''}">
+          <svg class="tchk-inner" viewBox="0 0 11 8" fill="none"><path d="M1 4L4 7L10 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="ttext${done?' done':''}">${item}</div>
+      </div>`;
+    }).join('')
+  ).join('');
+}
+function tog(key){checks[key]=!checks[key];save();renderTar();}
+function renderSat(){
+  document.getElementById('mainArea').innerHTML=
+    `<div class="sat-intro">Your Saturday command centre. Nothing gets spent or actioned that week unless it goes through this session first.</div>`+
+    SATBLOCKS.map(b=>`
+      <div class="sat-block">
+        <div class="sat-block-title">${b.title}</div>
+        ${b.items.map(it=>`<div class="sat-item"><span class="sat-bull">▸</span>${it}</div>`).join('')}
+      </div>`).join('');
+}
+init();
+</script>
+</body>
+</html>
