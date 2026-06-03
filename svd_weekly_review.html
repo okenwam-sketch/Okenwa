@@ -1,0 +1,435 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.app{padding:12px;font-family:var(--font-sans)}
+.wk-header{background:#1a0a0a;border-radius:var(--border-radius-lg);padding:14px 16px;margin-bottom:12px;border:0.5px solid #c0392b;display:flex;justify-content:space-between;align-items:center}
+.wk-header h1{color:#e74c3c;font-size:18px;font-weight:500;letter-spacing:1.5px}
+.wk-header .wk-num{color:#aaa;font-size:12px;margin-top:2px}
+.step-nav{display:flex;gap:4px;margin-bottom:12px;overflow-x:auto;padding-bottom:2px}
+.step-btn{padding:6px 10px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);font-size:11px;cursor:pointer;background:var(--color-background-secondary);color:var(--color-text-secondary);white-space:nowrap;font-weight:500}
+.step-btn.active{background:#c0392b;color:#fff;border-color:#c0392b}
+.step-btn.done-s{border-color:#27ae60;color:#27ae60}
+.section{display:none}
+.section.active{display:block}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px;margin-bottom:10px}
+.section-label{font-size:11px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.row{display:flex;align-items:flex-start;justify-content:space-between;padding:9px 0;border-bottom:0.5px solid var(--color-border-tertiary);gap:8px}
+.row:last-child{border-bottom:none;padding-bottom:0}
+.row-label{font-size:13px;color:var(--color-text-primary);flex:1;line-height:1.4}
+.row-sub{font-size:11px;color:var(--color-text-tertiary);margin-top:2px}
+.num-input{width:70px;font-size:13px;padding:5px 8px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-primary);text-align:right}
+.delta{font-size:11px;padding:2px 6px;border-radius:4px;font-weight:500;min-width:40px;text-align:center}
+.delta.up{background:#27ae6022;color:#27ae60}
+.delta.down{background:#c0392b22;color:#c0392b}
+.delta.flat{background:var(--color-background-secondary);color:var(--color-text-tertiary)}
+.score-wrap{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.score-btn{padding:6px 14px;border-radius:20px;border:0.5px solid var(--color-border-secondary);font-size:12px;cursor:pointer;background:var(--color-background-secondary);color:var(--color-text-secondary)}
+.score-btn.sel-green{background:#27ae6022;border-color:#27ae60;color:#27ae60;font-weight:500}
+.score-btn.sel-amber{background:#e67e2222;border-color:#e67e22;color:#e67e22;font-weight:500}
+.score-btn.sel-red{background:#c0392b22;border-color:#c0392b;color:#c0392b;font-weight:500}
+.textarea{width:100%;font-size:13px;padding:8px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-primary);resize:none;font-family:var(--font-sans);line-height:1.5}
+.check-row{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--color-border-tertiary)}
+.check-row:last-child{border-bottom:none}
+.check-row input[type=checkbox]{margin-top:2px;accent-color:#c0392b;width:16px;height:16px;flex-shrink:0;cursor:pointer}
+.check-row label{font-size:13px;color:var(--color-text-primary);cursor:pointer;line-height:1.4}
+.nav-btns{display:flex;gap:8px;margin-top:12px}
+.nav-btns button{flex:1;padding:10px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);font-size:13px;cursor:pointer;background:var(--color-background-secondary);color:var(--color-text-primary);font-weight:500}
+.nav-btns .primary{background:#c0392b;color:#fff;border-color:#c0392b}
+.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.summary-card{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px}
+.summary-card .val{font-size:18px;font-weight:500;color:var(--color-text-primary)}
+.summary-card .lbl{font-size:11px;color:var(--color-text-secondary);margin-top:2px}
+.week-select{padding:5px 8px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-primary);font-size:13px;font-family:var(--font-sans)}
+.pill-status{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:500}
+.pill-green{background:#27ae6022;color:#27ae60}
+.pill-amber{background:#e67e2222;color:#e67e22}
+.pill-red{background:#c0392b22;color:#c0392b}
+.mood-row{display:flex;gap:8px;margin-top:6px}
+.mood-btn{flex:1;padding:8px 4px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);font-size:12px;cursor:pointer;background:var(--color-background-secondary);color:var(--color-text-secondary);text-align:center}
+.mood-btn.sel{border-color:#c0392b;color:#c0392b;background:#c0392b11;font-weight:500}
+.focus-tag{display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border-radius:20px;font-size:12px;border:0.5px solid var(--color-border-secondary);background:var(--color-background-secondary);color:var(--color-text-secondary);cursor:pointer;margin:3px}
+.focus-tag.sel{background:#c0392b11;border-color:#c0392b;color:#c0392b}
+</style>
+
+<h2 class="sr-only">SVD weekly review — track music, events, content, finances, mindset and plan ahead each week</h2>
+
+<div class="app">
+<div class="wk-header">
+  <div>
+    <div class="wk-header h1" style="color:#e74c3c;font-size:18px;font-weight:500;letter-spacing:1.5px">SVD WEEKLY REVIEW</div>
+    <div class="wk-num" id="wk-date-lbl" style="color:#aaa;font-size:12px;margin-top:2px"></div>
+  </div>
+  <select class="week-select" id="week-sel" onchange="loadWeek(this.value)"></select>
+</div>
+
+<div class="step-nav" id="step-nav">
+  <button class="step-btn active" onclick="goStep(0)">Numbers</button>
+  <button class="step-btn" onclick="goStep(1)">Content</button>
+  <button class="step-btn" onclick="goStep(2)">Events</button>
+  <button class="step-btn" onclick="goStep(3)">Money</button>
+  <button class="step-btn" onclick="goStep(4)">Mindset</button>
+  <button class="step-btn" onclick="goStep(5)">Next week</button>
+  <button class="step-btn" onclick="goStep(6)">Summary</button>
+</div>
+
+<div id="s0" class="section active">
+  <div class="card">
+    <div class="section-label"><i class="ti ti-chart-bar" style="font-size:16px" aria-hidden="true"></i> Numbers this week</div>
+    <div class="row">
+      <div><div class="row-label">Spotify listeners</div><div class="row-sub">Monthly listeners on artist page</div></div>
+      <input class="num-input" type="number" id="n-spotify" placeholder="0" oninput="calcDelta('spotify')">
+    </div>
+    <div class="row">
+      <div><div class="row-label">Spotify streams</div><div class="row-sub">Total streams this week</div></div>
+      <input class="num-input" type="number" id="n-streams" placeholder="0">
+    </div>
+    <div class="row">
+      <div><div class="row-label">Instagram followers</div><div class="row-sub">Current count</div></div>
+      <input class="num-input" type="number" id="n-insta" placeholder="2851" oninput="calcDelta('insta')">
+    </div>
+    <div class="row">
+      <div><div class="row-label">Instagram reach</div><div class="row-sub">Total reach across posts</div></div>
+      <input class="num-input" type="number" id="n-reach" placeholder="0">
+    </div>
+    <div class="row">
+      <div><div class="row-label">Snapchat views</div><div class="row-sub">Story views avg</div></div>
+      <input class="num-input" type="number" id="n-snap" placeholder="0">
+    </div>
+    <div class="row">
+      <div><div class="row-label">Wix website visits</div><div class="row-sub">Merch + event site</div></div>
+      <input class="num-input" type="number" id="n-web" placeholder="0">
+    </div>
+    <div class="row">
+      <div><div class="row-label">Jul 23 tickets signed up</div><div class="row-sub">Running total</div></div>
+      <input class="num-input" type="number" id="n-tickets" placeholder="0">
+    </div>
+    <div class="row">
+      <div><div class="row-label">Email list size</div><div class="row-sub">Total captured emails</div></div>
+      <input class="num-input" type="number" id="n-email" placeholder="0">
+    </div>
+  </div>
+  <div class="nav-btns"><button class="primary" onclick="goStep(1)">Next →</button></div>
+</div>
+
+<div id="s1" class="section">
+  <div class="card">
+    <div class="section-label"><i class="ti ti-video" style="font-size:16px" aria-hidden="true"></i> Content posted this week</div>
+    <div class="check-row"><input type="checkbox" id="c1"><label for="c1">Instagram post 1 — music video</label></div>
+    <div class="check-row"><input type="checkbox" id="c2"><label for="c2">Instagram post 2 — music photo</label></div>
+    <div class="check-row"><input type="checkbox" id="c3"><label for="c3">Instagram post 3 — personality / piano series</label></div>
+    <div class="check-row"><input type="checkbox" id="c4"><label for="c4">Snapchat — networking event</label></div>
+    <div class="check-row"><input type="checkbox" id="c5"><label for="c5">Snapchat — gym (2x this week)</label></div>
+    <div class="check-row"><input type="checkbox" id="c6"><label for="c6">Snapchat — ThinkLeafy drink promo</label></div>
+    <div class="check-row"><input type="checkbox" id="c7"><label for="c7">Insta repurposed to Snapchat</label></div>
+  </div>
+  <div class="card">
+    <div class="section-label"><i class="ti ti-star" style="font-size:16px" aria-hidden="true"></i> Best performing post</div>
+    <textarea class="textarea" id="t-best-post" rows="2" placeholder="Which post did best? What got the most reach/engagement?"></textarea>
+  </div>
+  <div class="card">
+    <div class="section-label"><i class="ti ti-bulb" style="font-size:16px" aria-hidden="true"></i> Content ideas for next month</div>
+    <textarea class="textarea" id="t-content-ideas" rows="3" placeholder="Ideas, concepts, topics you want to shoot next month..."></textarea>
+  </div>
+  <div class="nav-btns">
+    <button onclick="goStep(0)">← Back</button>
+    <button class="primary" onclick="goStep(2)">Next →</button>
+  </div>
+</div>
+
+<div id="s2" class="section">
+  <div class="card">
+    <div class="section-label"><i class="ti ti-calendar-event" style="font-size:16px" aria-hidden="true"></i> Events & gigs this week</div>
+    <div class="check-row"><input type="checkbox" id="e1"><label for="e1">Attended a networking event</label></div>
+    <div class="check-row"><input type="checkbox" id="e2"><label for="e2">Performed a gig this week</label></div>
+    <div class="check-row"><input type="checkbox" id="e3"><label for="e3">Jul 23 event — progress task completed</label></div>
+    <div class="check-row"><input type="checkbox" id="e4"><label for="e4">Personal licence study done (if not yet qualified)</label></div>
+    <div class="check-row"><input type="checkbox" id="e5"><label for="e5">Venue contact made / confirmed</label></div>
+    <div class="check-row"><input type="checkbox" id="e6"><label for="e6">Flyers distributed or QR code shared</label></div>
+    <div class="check-row"><input type="checkbox" id="e7"><label for="e7">Uni ambassador checked in</label></div>
+  </div>
+  <div class="card">
+    <div class="section-label"><i class="ti ti-music" style="font-size:16px" aria-hidden="true"></i> Music & piano</div>
+    <div class="check-row"><input type="checkbox" id="m1"><label for="m1">Piano lesson done</label></div>
+    <div class="check-row"><input type="checkbox" id="m2"><label for="m2">Beat work / production session</label></div>
+    <div class="check-row"><input type="checkbox" id="m3"><label for="m3">Writing session completed</label></div>
+    <div class="check-row"><input type="checkbox" id="m4"><label for="m4">Song submitted for Spotify editorial pitch</label></div>
+  </div>
+  <div class="card">
+    <div class="section-label">Notes from events / gigs</div>
+    <textarea class="textarea" id="t-event-notes" rows="3" placeholder="Who did you meet? Connections made? Crowd reaction? Anything to follow up?"></textarea>
+  </div>
+  <div class="nav-btns">
+    <button onclick="goStep(1)">← Back</button>
+    <button class="primary" onclick="goStep(3)">Next →</button>
+  </div>
+</div>
+
+<div id="s3" class="section">
+  <div class="card">
+    <div class="section-label"><i class="ti ti-currency-pound" style="font-size:16px" aria-hidden="true"></i> Money in this week</div>
+    <div class="row">
+      <div><div class="row-label">Merch sales</div></div>
+      <input class="num-input" type="number" id="f-merch" placeholder="0">
+    </div>
+    <div class="row">
+      <div><div class="row-label">ThinkLeafy drink sales</div></div>
+      <input class="num-input" type="number" id="f-cbd" placeholder="0">
+    </div>
+    <div class="row">
+      <div><div class="row-label">Gig / performance fee</div></div>
+      <input class="num-input" type="number" id="f-gig" placeholder="0">
+    </div>
+    <div class="row">
+      <div><div class="row-label">Spotify / streaming income</div></div>
+      <input class="num-input" type="number" id="f-stream" placeholder="0">
+    </div>
+    <div class="row" style="border-top:0.5px solid var(--color-border-secondary);margin-top:4px;padding-top:10px">
+      <div style="font-size:13px;font-weight:500;color:var(--color-text-primary)">Total in</div>
+      <div style="font-size:15px;font-weight:500;color:#27ae60" id="f-total-in">£0</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="section-label"><i class="ti ti-arrow-up" style="font-size:16px" aria-hidden="true"></i> Money spent this week (SVD)</div>
+    <div class="row">
+      <div><div class="row-label">Videographer / content</div></div>
+      <input class="num-input" type="number" id="f-video" placeholder="0">
+    </div>
+    <div class="row">
+      <div><div class="row-label">Outfits / clothes</div></div>
+      <input class="num-input" type="number" id="f-outfits" placeholder="0">
+    </div>
+    <div class="row">
+      <div><div class="row-label">Piano lessons</div></div>
+      <input class="num-input" type="number" id="f-piano" placeholder="0">
+    </div>
+    <div class="row">
+      <div><div class="row-label">Ads / promotion</div></div>
+      <input class="num-input" type="number" id="f-ads" placeholder="0">
+    </div>
+    <div class="row">
+      <div><div class="row-label">Event costs</div></div>
+      <input class="num-input" type="number" id="f-event" placeholder="0">
+    </div>
+    <div class="row">
+      <div><div class="row-label">ThinkLeafy stock</div></div>
+      <input class="num-input" type="number" id="f-cbd-stock" placeholder="0">
+    </div>
+    <div class="row" style="border-top:0.5px solid var(--color-border-secondary);margin-top:4px;padding-top:10px">
+      <div style="font-size:13px;font-weight:500;color:var(--color-text-primary)">Total out</div>
+      <div style="font-size:15px;font-weight:500;color:#c0392b" id="f-total-out">£0</div>
+    </div>
+  </div>
+  <div class="card" style="border-color:var(--color-border-secondary)">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:14px;font-weight:500;color:var(--color-text-primary)">Net this week</div>
+      <div style="font-size:20px;font-weight:500" id="f-net">£0</div>
+    </div>
+    <div style="font-size:11px;color:var(--color-text-tertiary);margin-top:4px">Target: £3,500/month net to scale</div>
+  </div>
+  <div class="nav-btns">
+    <button onclick="goStep(2)">← Back</button>
+    <button class="primary" onclick="goStep(4)">Next →</button>
+  </div>
+</div>
+
+<div id="s4" class="section">
+  <div class="card">
+    <div class="section-label"><i class="ti ti-brain" style="font-size:16px" aria-hidden="true"></i> Energy & mindset this week</div>
+    <div style="font-size:13px;color:var(--color-text-secondary);margin-bottom:6px">How did the week feel overall?</div>
+    <div class="mood-row">
+      <button class="mood-btn" id="mood-1" onclick="setMood(1)">Low</button>
+      <button class="mood-btn" id="mood-2" onclick="setMood(2)">Okay</button>
+      <button class="mood-btn" id="mood-3" onclick="setMood(3)">Solid</button>
+      <button class="mood-btn" id="mood-4" onclick="setMood(4)">Locked in</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="section-label">What worked well?</div>
+    <textarea class="textarea" id="t-worked" rows="3" placeholder="What felt good this week? Any wins, big or small..."></textarea>
+  </div>
+  <div class="card">
+    <div class="section-label">What didn't work?</div>
+    <textarea class="textarea" id="t-didnt" rows="3" placeholder="What slipped? What do you want to change?"></textarea>
+  </div>
+  <div class="card">
+    <div class="section-label">1 thing that would have made this week a 10</div>
+    <textarea class="textarea" id="t-ten" rows="2" placeholder="Be honest — what one thing?"></textarea>
+  </div>
+  <div class="nav-btns">
+    <button onclick="goStep(3)">← Back</button>
+    <button class="primary" onclick="goStep(5)">Next →</button>
+  </div>
+</div>
+
+<div id="s5" class="section">
+  <div class="card">
+    <div class="section-label"><i class="ti ti-arrow-right" style="font-size:16px" aria-hidden="true"></i> Next week — plan now</div>
+    <div style="font-size:13px;color:var(--color-text-secondary);margin-bottom:8px">Top 3 priorities (non-negotiable)</div>
+    <input type="text" id="p1" placeholder="Priority 1" style="width:100%;font-size:13px;padding:7px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-primary);margin-bottom:6px">
+    <input type="text" id="p2" placeholder="Priority 2" style="width:100%;font-size:13px;padding:7px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-primary);margin-bottom:6px">
+    <input type="text" id="p3" placeholder="Priority 3" style="width:100%;font-size:13px;padding:7px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-primary)">
+  </div>
+  <div class="card">
+    <div class="section-label"><i class="ti ti-focus" style="font-size:16px" aria-hidden="true"></i> Focus area next week</div>
+    <div style="display:flex;flex-wrap:wrap;gap:2px">
+      <button class="focus-tag" id="f-music" onclick="toggleFocus('music')">Music</button>
+      <button class="focus-tag" id="f-event" onclick="toggleFocus('event')">Jul 23 event</button>
+      <button class="focus-tag" id="f-content" onclick="toggleFocus('content')">Content</button>
+      <button class="focus-tag" id="f-cbd" onclick="toggleFocus('cbd')">ThinkLeafy</button>
+      <button class="focus-tag" id="f-merch" onclick="toggleFocus('merch')">Merch</button>
+      <button class="focus-tag" id="f-network" onclick="toggleFocus('network')">Networking</button>
+      <button class="focus-tag" id="f-piano" onclick="toggleFocus('piano')">Piano</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="section-label">Content planned for next week</div>
+    <textarea class="textarea" id="t-next-content" rows="3" placeholder="What are the 3 posts? What shoot is booked? What video is going up?"></textarea>
+  </div>
+  <div class="card">
+    <div class="section-label">Networking events booked</div>
+    <textarea class="textarea" id="t-next-events" rows="2" placeholder="Which events are you attending next week?"></textarea>
+  </div>
+  <div class="nav-btns">
+    <button onclick="goStep(4)">← Back</button>
+    <button class="primary" onclick="saveAndSummary()">Save & view summary →</button>
+  </div>
+</div>
+
+<div id="s6" class="section">
+  <div class="card">
+    <div class="section-label"><i class="ti ti-clipboard-check" style="font-size:16px" aria-hidden="true"></i> Week summary</div>
+    <div class="summary-grid">
+      <div class="summary-card"><div class="val" id="sum-spotify">—</div><div class="lbl">Spotify listeners</div></div>
+      <div class="summary-card"><div class="val" id="sum-insta">—</div><div class="lbl">Instagram followers</div></div>
+      <div class="summary-card"><div class="val" id="sum-in">£0</div><div class="lbl">Revenue in</div></div>
+      <div class="summary-card"><div class="val" id="sum-net">£0</div><div class="lbl">Net this week</div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="section-label">Content checklist</div>
+    <div id="sum-content" style="font-size:13px;color:var(--color-text-secondary)"></div>
+  </div>
+  <div class="card">
+    <div class="section-label">Next week priorities</div>
+    <div id="sum-priorities" style="font-size:13px;color:var(--color-text-primary);line-height:2"></div>
+  </div>
+  <div class="card">
+    <div class="section-label">Mindset</div>
+    <div id="sum-mindset" style="font-size:13px;color:var(--color-text-secondary)"></div>
+  </div>
+  <div class="nav-btns">
+    <button onclick="goStep(0)">Start new week</button>
+    <button class="primary" onclick="sendPrompt('Help me analyse my SVD weekly review results and tell me what to focus on to grow fastest')">Get strategy advice ↗</button>
+  </div>
+</div>
+</div>
+
+<script>
+const STEPS = ['s0','s1','s2','s3','s4','s5','s6'];
+const STEP_LABELS = ['Numbers','Content','Events','Money','Mindset','Next week','Summary'];
+let currentStep = 0;
+let selectedMood = 0;
+const focusSel = {};
+
+function goStep(n){
+  STEPS.forEach((s,i)=>{
+    document.getElementById(s).classList.toggle('active', i===n);
+  });
+  document.querySelectorAll('.step-btn').forEach((b,i)=>{
+    b.classList.remove('active');
+    if(i===n) b.classList.add('active');
+  });
+  currentStep = n;
+}
+
+function setMood(v){
+  selectedMood = v;
+  [1,2,3,4].forEach(i=>{
+    document.getElementById('mood-'+i).classList.toggle('sel', i===v);
+  });
+}
+
+function toggleFocus(k){
+  focusSel[k] = !focusSel[k];
+  document.getElementById('f-'+k).classList.toggle('sel', focusSel[k]);
+}
+
+function gv(id){ return parseFloat(document.getElementById(id).value)||0; }
+
+function calcFinance(){
+  const inc = gv('f-merch')+gv('f-cbd')+gv('f-gig')+gv('f-stream');
+  const out = gv('f-video')+gv('f-outfits')+gv('f-piano')+gv('f-ads')+gv('f-event')+gv('f-cbd-stock');
+  const net = inc - out;
+  document.getElementById('f-total-in').textContent = '£'+Math.round(inc).toLocaleString();
+  document.getElementById('f-total-out').textContent = '£'+Math.round(out).toLocaleString();
+  const netEl = document.getElementById('f-net');
+  netEl.textContent = (net>=0?'£':'−£')+Math.round(Math.abs(net)).toLocaleString();
+  netEl.style.color = net>=0 ? '#27ae60' : '#c0392b';
+}
+
+['f-merch','f-cbd','f-gig','f-stream','f-video','f-outfits','f-piano','f-ads','f-event','f-cbd-stock'].forEach(id=>{
+  const el = document.getElementById(id);
+  if(el) el.addEventListener('input', calcFinance);
+});
+
+function saveAndSummary(){
+  const sp = document.getElementById('n-spotify').value || '—';
+  const ins = document.getElementById('n-insta').value || '—';
+  document.getElementById('sum-spotify').textContent = sp==='—' ? '—' : parseInt(sp).toLocaleString();
+  document.getElementById('sum-insta').textContent = ins==='—' ? '—' : parseInt(ins).toLocaleString();
+
+  const inc = gv('f-merch')+gv('f-cbd')+gv('f-gig')+gv('f-stream');
+  const out = gv('f-video')+gv('f-outfits')+gv('f-piano')+gv('f-ads')+gv('f-event')+gv('f-cbd-stock');
+  const net = inc - out;
+  document.getElementById('sum-in').textContent = '£'+Math.round(inc).toLocaleString();
+  const sn = document.getElementById('sum-net');
+  sn.textContent = (net>=0?'£':'−£')+Math.round(Math.abs(net)).toLocaleString();
+  sn.style.color = net>=0 ? '#27ae60' : '#c0392b';
+
+  const contentIds = ['c1','c2','c3','c4','c5','c6','c7'];
+  const contentLabels = ['Insta video','Insta photo','Insta personality','Snap networking','Snap gym x2','Snap ThinkLeafy','Insta→Snap'];
+  let chtml = '';
+  contentIds.forEach((id,i)=>{
+    const done = document.getElementById(id).checked;
+    chtml += `<div style="display:flex;align-items:center;gap:8px;padding:4px 0"><span style="color:${done?'#27ae60':'#c0392b'};font-size:16px">${done?'✓':'✗'}</span><span style="color:var(--color-text-primary)">${contentLabels[i]}</span></div>`;
+  });
+  document.getElementById('sum-content').innerHTML = chtml;
+
+  const p1 = document.getElementById('p1').value;
+  const p2 = document.getElementById('p2').value;
+  const p3 = document.getElementById('p3').value;
+  let phtml = '';
+  if(p1) phtml += `<div>1. ${p1}</div>`;
+  if(p2) phtml += `<div>2. ${p2}</div>`;
+  if(p3) phtml += `<div>3. ${p3}</div>`;
+  document.getElementById('sum-priorities').innerHTML = phtml || '<span style="color:var(--color-text-tertiary)">None set</span>';
+
+  const moods = ['','Low energy','Okay week','Solid week','Locked in'];
+  const moodStr = selectedMood ? moods[selectedMood] : 'Not recorded';
+  const worked = document.getElementById('t-worked').value;
+  document.getElementById('sum-mindset').textContent = moodStr + (worked ? ' · ' + worked.slice(0,80) : '');
+
+  goStep(6);
+}
+
+const now = new Date();
+const weekSel = document.getElementById('week-sel');
+for(let i=0;i<12;i++){
+  const d = new Date(now);
+  d.setDate(d.getDate() - (i*7));
+  const start = new Date(d);
+  start.setDate(d.getDate() - d.getDay() + 1);
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
+  const fmt = dt => dt.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+  const opt = document.createElement('option');
+  opt.value = i;
+  opt.textContent = fmt(start)+' – '+fmt(end);
+  weekSel.appendChild(opt);
+}
+document.getElementById('wk-date-lbl').textContent = weekSel.options[0]?.textContent || '';
+weekSel.addEventListener('change', ()=>{
+  document.getElementById('wk-date-lbl').textContent = weekSel.options[weekSel.selectedIndex]?.textContent || '';
+});
+function loadWeek(v){ }
+</script>
