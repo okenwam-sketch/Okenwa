@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SVD Music">
+<meta name="theme-color" content="#0d0d0d">
+<title>SVD Music Process</title>
+<style>
+:root{
+  --bg:#0d0d0d;--bg2:#161616;--bg3:#1f1f1f;--bg4:#272727;
+  --red:#c0392b;--red-b:#e74c3c;
+  --text:#f0ede8;--muted:rgba(240,237,232,0.5);--dim:rgba(240,237,232,0.25);
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --green:#2ecc71;--amber:#f39c12;--blue:#3498db;--purple:#9b59b6;--teal:#1abc9c;--pink:#e91e8c;
+  --safe-top:env(safe-area-inset-top,44px);--safe-bottom:env(safe-area-inset-bottom,20px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--bg);font-family:-apple-system,'SF Pro Display','Helvetica Neue',sans-serif;color:var(--text)}
+.app{display:flex;flex-direction:column;height:100vh;height:100dvh;position:relative}
+.status-bar{height:var(--safe-top);background:var(--bg);flex-shrink:0}
+.header{padding:14px 18px 10px;flex-shrink:0}
+.title{font-size:24px;font-weight:800;letter-spacing:-0.5px}
+.title .accent{color:var(--red-b)}
+.sub{font-size:12px;color:var(--muted);margin-top:3px}
+.tab-bar{display:flex;gap:6px;padding:0 16px 12px;flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.tab-bar::-webkit-scrollbar{display:none}
+.tab-pill{padding:6px 13px;border-radius:20px;border:0.5px solid var(--border2);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;color:var(--muted);background:var(--bg2)}
+.tab-pill.active{background:var(--red);color:#fff;border-color:var(--red)}
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:24px}
+.scroll::-webkit-scrollbar{display:none}
+.screen{display:none}
+.screen.active{display:block}
+.card{background:var(--bg2);border:0.5px solid var(--border);border-radius:16px;margin:0 14px 10px;overflow:hidden}
+.card-hdr{padding:12px 14px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.card-title{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+
+/* STAGE CARDS */
+.stage{background:var(--bg2);border:0.5px solid var(--border);border-radius:16px;margin:0 14px 10px;overflow:hidden}
+.stage-hdr{padding:13px 14px;display:flex;align-items:center;gap:10px;cursor:pointer}
+.stage-icon{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.stage-info{flex:1}
+.stage-name{font-size:14px;font-weight:700;color:var(--text)}
+.stage-hint{font-size:11px;color:var(--muted);margin-top:1px}
+.badge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;flex-shrink:0}
+.chev{font-size:13px;color:var(--dim);transition:transform 0.2s;flex-shrink:0}
+.chev.open{transform:rotate(180deg)}
+.stage-body{display:none;border-top:0.5px solid var(--border)}
+.stage-body.open{display:block}
+.step{padding:11px 14px;border-bottom:0.5px solid var(--border);display:flex;gap:10px}
+.step:last-child{border-bottom:none}
+.sdot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.stitle{font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px}
+.sdetail{font-size:12px;color:var(--muted);line-height:1.5}
+.tip{background:var(--bg3);border-radius:8px;padding:8px 10px;margin-top:7px;font-size:11px;color:var(--muted);line-height:1.5;border-left:2px solid var(--red)}
+.chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.chip{font-size:10px;padding:2px 7px;border-radius:10px;background:var(--bg4);border:0.5px solid var(--border2);color:var(--dim)}
+.gate{margin:0 14px 10px;padding:11px 14px;border-radius:12px;display:flex;align-items:flex-start;gap:10px;border:0.5px dashed rgba(243,156,18,0.4);background:rgba(243,156,18,0.05)}
+.phase-lbl{margin:4px 14px 8px;display:flex;align-items:center;gap:7px}
+.phase-line{height:1px;flex:1;background:var(--border2)}
+.phase-text{font-size:10px;font-weight:700;letter-spacing:1px;color:var(--dim);text-transform:uppercase;white-space:nowrap}
+.conn{text-align:center;font-size:18px;color:var(--dim);padding:2px 0;margin-bottom:10px}
+
+/* TRACK CARDS */
+.track-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:16px;margin:0 14px 10px;overflow:hidden}
+.track-top{padding:13px 14px;cursor:pointer}
+.track-name-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.track-name{font-size:15px;font-weight:700;color:var(--text)}
+.track-pct{font-size:13px;font-weight:700}
+.track-meta{font-size:11px;color:var(--muted);margin-bottom:8px}
+.prog-bar{height:4px;background:var(--bg4);border-radius:2px;overflow:hidden}
+.prog-fill{height:100%;border-radius:2px;transition:width 0.4s}
+.track-stages{display:none;border-top:0.5px solid var(--border)}
+.ts-row{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:0.5px solid var(--border);cursor:pointer}
+.ts-row:last-child{border-bottom:none}
+.ts-check{width:20px;height:20px;border-radius:6px;border:1.5px solid var(--border2);flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.ts-check.done{background:var(--red);border-color:var(--red)}
+.ts-check.done::after{content:"✓";font-size:11px;color:#fff;font-weight:700}
+.ts-info{flex:1}
+.ts-label{font-size:13px;color:var(--text);font-weight:500}
+.ts-label.done{color:var(--dim);text-decoration:line-through}
+.ts-dates{font-size:10px;color:var(--dim);margin-top:3px}
+.ts-days{font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;flex-shrink:0;margin-top:1px}
+.add-btn{margin:0 14px 10px;width:calc(100% - 28px);padding:12px;border-radius:12px;background:transparent;border:0.5px dashed var(--border2);color:var(--muted);font-size:13px;font-weight:600;cursor:pointer}
+
+/* TRENDS */
+.trend-stat{background:var(--bg3);border-radius:12px;padding:11px;border:0.5px solid var(--border)}
+.trend-val{font-size:20px;font-weight:800;color:var(--text)}
+.trend-lbl{font-size:11px;color:var(--dim);margin-top:2px}
+.trend-delta{font-size:10px;font-weight:700;margin-top:3px}
+.bar-wrap{padding:10px 0}
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.bar-label{font-size:11px;color:var(--muted);width:90px;flex-shrink:0;text-align:right}
+.bar-track{flex:1;height:8px;background:var(--bg4);border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px;transition:width 0.5s}
+.bar-val{font-size:10px;font-weight:700;min-width:30px;text-align:right}
+.song-compare-row{padding:8px 14px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.song-compare-row:last-child{border-bottom:none}
+
+/* MODAL */
+.modal{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.75);display:flex;align-items:flex-end;z-index:100}
+.modal-box{background:var(--bg2);border-radius:16px 16px 0 0;padding:20px;width:100%;padding-bottom:calc(20px + var(--safe-bottom))}
+.modal-title{font-size:16px;font-weight:700;margin-bottom:14px}
+.std-input{background:var(--bg3);border:0.5px solid var(--border2);border-radius:8px;padding:9px 11px;color:var(--text);font-size:13px;font-family:-apple-system,sans-serif;width:100%}
+.std-input:focus{outline:none;border-color:var(--red)}
+.mbtn{width:100%;padding:12px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px;border:none}
+.mbtn-confirm{background:var(--red);color:#fff}
+.mbtn-cancel{background:var(--bg3);color:var(--muted)}
+
+/* LEARN */
+.learn-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:16px;margin:0 14px 10px;overflow:hidden}
+.learn-hdr{padding:12px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+.learn-title{font-size:13px;font-weight:700;color:var(--text)}
+.learn-sub{font-size:11px;color:var(--muted);margin-top:1px}
+.learn-body{display:none;border-top:0.5px solid var(--border)}
+.learn-body.open{display:block}
+.learn-item{padding:9px 14px;border-bottom:0.5px solid var(--border);font-size:12px;color:var(--muted);line-height:1.5;display:flex;gap:8px}
+.learn-item:last-child{border-bottom:none}
+.learn-item::before{content:"→";color:var(--red);flex-shrink:0}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="status-bar"></div>
+<div class="header">
+  <div class="title">SVD <span class="accent">Music</span></div>
+  <div class="sub">Personal songwriting · Beat-making · Release</div>
+</div>
+<div class="tab-bar" id="tabs">
+  <div class="tab-pill active" onclick="switchTab('process')">Process</div>
+  <div class="tab-pill" onclick="switchTab('tracks')">My tracks</div>
+  <div class="tab-pill" onclick="switchTab('trends')">Trends</div>
+  <div class="tab-pill" onclick="switchTab('learn')">Beat school</div>
+</div>
+<div class="scroll">
+
+<!-- PROCESS -->
+<div class="screen active" id="screen-process">
+<div class="phase-lbl"><div class="phase-line"></div><div class="phase-text">Phase 1 — sketch (always)</div><div class="phase-line"></div></div>
+
+<div class="stage" style="border-color:rgba(192,57,43,0.3)">
+  <div class="stage-hdr" onclick="tog(this)">
+    <div class="stage-icon" style="background:#c0392b22">🎹</div>
+    <div class="stage-info"><div class="stage-name">1 — Feeling & chords</div><div class="stage-hint">Piano first. Always.</div></div>
+    <div class="badge" style="background:#c0392b22;color:#e74c3c">Start here</div>
+    <i class="ti ti-chevron-down chev open" aria-hidden="true"></i>
+  </div>
+  <div class="stage-body open">
+    <div class="step"><div class="sdot" style="background:#c0392b"></div><div><div class="stitle">Write the emotion in one sentence</div><div class="sdetail">What is this song about? What does it feel like? This anchors every decision that follows.</div></div></div>
+    <div class="step"><div class="sdot" style="background:#c0392b"></div><div><div class="stitle">MIDI piano → Ableton → Spitfire LABS piano</div><div class="sdetail">Download Spitfire LABS free — Felt Piano or Soft Piano. Beautiful and emotional. Set BPM 70-90 for RnB.</div><div class="chips"><span class="chip">MIDI keyboard</span><span class="chip">Spitfire LABS (free)</span><span class="chip">Ableton</span></div></div></div>
+    <div class="step"><div class="sdot" style="background:#c0392b"></div><div><div class="stitle">Find 3-4 chords that match the feeling</div><div class="sdetail">Minor 7ths, major 9ths, suspended chords — these are RnB flavours. Play until something gives you a feeling in your chest. That's the one.</div><div class="tip">Stay in one key. If unsure — play a chord you like, then only use notes that sound good with it. That's diatonic playing and it always works.</div></div></div>
+    <div class="step"><div class="sdot" style="background:#c0392b"></div><div><div class="stitle">Loop and just listen for 2 minutes</div><div class="sdetail">Before writing a single word, let the chords play. Melodies and words start coming naturally. Don't force it.</div></div></div>
+  </div>
+</div>
+<div class="conn">↓</div>
+<div class="stage" style="border-color:rgba(52,152,219,0.3)">
+  <div class="stage-hdr" onclick="tog(this)">
+    <div class="stage-icon" style="background:#3498db22">🥁</div>
+    <div class="stage-info"><div class="stage-name">2 — Rough drums & bass</div><div class="stage-hint">30 mins max. Feel not perfection.</div></div>
+    <div class="badge" style="background:#3498db22;color:#3498db">Keep simple</div>
+    <i class="ti ti-chevron-down chev" aria-hidden="true"></i>
+  </div>
+  <div class="stage-body">
+    <div class="step"><div class="sdot" style="background:#3498db"></div><div><div class="stitle">Basic RnB drum loop in Ableton</div><div class="sdetail">Kick on 1 and 3. Snare on 2 and 4. Hi-hat every 8th note. Right-click clip → Groove → 8B Swing. That's a groove.</div><div class="chips"><span class="chip">Ableton Drum Rack</span><span class="chip">Splice free samples</span></div></div></div>
+    <div class="step"><div class="sdot" style="background:#3498db"></div><div><div class="stitle">Root note bass line</div><div class="sdetail">On MIDI keyboard: play the root note of each chord on beat 1. Assign to Ableton Operator. Simple and enough for sketching.</div><div class="tip" style="border-left-color:#3498db">This stage is 20-30 mins max. Writing reference only — not a finished beat. Resist perfecting it now.</div></div></div>
+    <div class="step"><div class="sdot" style="background:#3498db"></div><div><div class="stitle">Does it feel good to move to?</div><div class="sdetail">Loop all three together. If yes — go write. If not — adjust BPM or swap one chord. Don't spend more than 10 mins on this decision.</div></div></div>
+  </div>
+</div>
+<div class="conn">↓</div>
+<div class="stage" style="border-color:rgba(46,204,113,0.3)">
+  <div class="stage-hdr" onclick="tog(this)">
+    <div class="stage-icon" style="background:#27ae6022">✍️</div>
+    <div class="stage-info"><div class="stage-name">3 — Write to the music</div><div class="stage-hint">Let the chords tell you what to say.</div></div>
+    <div class="badge" style="background:#27ae6022;color:#2ecc71">Most important</div>
+    <i class="ti ti-chevron-down chev" aria-hidden="true"></i>
+  </div>
+  <div class="stage-body">
+    <div class="step"><div class="sdot" style="background:#27ae60"></div><div><div class="stitle">Loop the track and hum — don't write yet</div><div class="sdetail">Find the hook melody first by humming over the chords. The chorus melody is the heart — everything else builds around it.</div></div></div>
+    <div class="step"><div class="sdot" style="background:#27ae60"></div><div><div class="stitle">Write lyrics to what you're already humming</div><div class="sdetail">Melody came first — now fit words to that melody. Not the other way round. This is how every great RnB song gets written.</div><div class="tip" style="border-left-color:#27ae60">Write fast and messy first. The first draft captures the truth of the feeling. Perfection kills the first draft.</div></div></div>
+    <div class="step"><div class="sdot" style="background:#27ae60"></div><div><div class="stitle">Structure: hook → verse → bridge</div><div class="sdetail">Write chorus/hook first. Verses lead into it. Bridge last — the emotional turn where the song shifts perspective.</div></div></div>
+  </div>
+</div>
+<div class="conn">↓</div>
+<div class="stage" style="border-color:rgba(243,156,18,0.3)">
+  <div class="stage-hdr" onclick="tog(this)">
+    <div class="stage-icon" style="background:#e67e2222">🎤</div>
+    <div class="stage-info"><div class="stage-name">4 — Demo vocal</div><div class="stage-hint">Emotion first. Capture it raw.</div></div>
+    <div class="badge" style="background:#e67e2222;color:#f39c12">Record rough</div>
+    <i class="ti ti-chevron-down chev" aria-hidden="true"></i>
+  </div>
+  <div class="stage-body">
+    <div class="step"><div class="sdot" style="background:#e67e22"></div><div><div class="stitle">Recording chain</div><div class="sdetail">Lewitt LCT 440 → Focusrite Scarlett Solo → Ableton. Gain so peaks hit -12dB. Hang a duvet behind you.</div><div class="chips"><span class="chip">Lewitt LCT 440</span><span class="chip">Focusrite Scarlett Solo</span></div></div></div>
+    <div class="step"><div class="sdot" style="background:#e67e22"></div><div><div class="stitle">3-4 takes per section, comp the best</div><div class="sdetail">Record verse 1, pre-chorus, chorus, verse 2, bridge separately. Pick the most emotionally connected phrases from each take. Soul first, pitch second.</div></div></div>
+    <div class="step"><div class="sdot" style="background:#e67e22"></div><div><div class="stitle">Quick Auto-Tune check</div><div class="sdetail">Antares, Retune Speed 20-40. Just to confirm the melody sits right in the key. Don't over-correct — this is still a demo.</div><div class="chips"><span class="chip">Antares Auto-Tune</span></div></div></div>
+  </div>
+</div>
+<div class="conn">↓</div>
+<div class="gate">
+  <div style="font-size:20px;flex-shrink:0">🚦</div>
+  <div><div style="font-size:13px;font-weight:700;color:#f39c12;margin-bottom:4px">Decision gate — does this have potential?</div><div style="font-size:12px;color:var(--muted);line-height:1.5">Listen back with fresh ears next morning. Does it give you a feeling? Yes → Phase 2. No → shelve it and start a new sketch. The best artists have hundreds of shelved ideas. Not every sketch needs to be finished.</div></div>
+</div>
+<div class="conn">↓</div>
+<div class="phase-lbl"><div class="phase-line"></div><div class="phase-text">Phase 2 — build (only if it passed the gate)</div><div class="phase-line"></div></div>
+
+<div class="stage" style="border-color:rgba(155,89,182,0.3)">
+  <div class="stage-hdr" onclick="tog(this)">
+    <div class="stage-icon" style="background:#9b59b622">🎛️</div>
+    <div class="stage-info"><div class="stage-name">5 — Complete the beat</div><div class="stage-hint">Now make it professional.</div></div>
+    <div class="badge" style="background:#9b59b622;color:#9b59b6">Build</div>
+    <i class="ti ti-chevron-down chev" aria-hidden="true"></i>
+  </div>
+  <div class="stage-body">
+    <div class="step"><div class="sdot" style="background:#9b59b6"></div><div><div class="stitle">Upgrade the drums</div><div class="sdetail">Layer kick (sub punch + click). Snare + clap + plate reverb. Ghost notes at 30-50% velocity. Hi-hat swing. Quiet shakers underneath.</div><div class="chips"><span class="chip">Ableton Drum Rack</span><span class="chip">Ableton EQ Eight</span></div></div></div>
+    <div class="step"><div class="sdot" style="background:#9b59b6"></div><div><div class="stitle">Proper bass line + sidechain</div><div class="sdetail">Add passing notes between chord changes. Set up sidechain compression — bass ducks when kick hits. This one technique closes most of the gap between amateur and professional low end.</div><div class="tip" style="border-left-color:#9b59b6">Check in mono — if it gets muddy the kick and bass are clashing. Fix timing before EQ.</div></div></div>
+    <div class="step"><div class="sdot" style="background:#9b59b6"></div><div><div class="stitle">Pad, texture, and a melodic hook</div><div class="sdetail">Sustained pad underneath chords (Spitfire LABS). Use Vochlea to hum the instrument melody into Ableton as MIDI. Assign to Rhodes or electric piano. Sparse — leave space for your voice.</div><div class="chips"><span class="chip">Spitfire LABS</span><span class="chip">Vochlea Dubler</span><span class="chip">Ableton Electric</span></div></div></div>
+    <div class="step"><div class="sdot" style="background:#9b59b6"></div><div><div class="stitle">Full arrangement</div><div class="sdetail">Intro (8) → Verse (16) → Pre-chorus (8) → Chorus (16) → Verse 2 (16) → Pre-chorus (8) → Chorus (16) → Bridge (8) → Final chorus (16) → Outro (8). Strip the verse back so the chorus lands harder by contrast.</div></div></div>
+  </div>
+</div>
+<div class="conn">↓</div>
+<div class="stage" style="border-color:rgba(26,188,156,0.3)">
+  <div class="stage-hdr" onclick="tog(this)">
+    <div class="stage-icon" style="background:#1abc9c22">🎚️</div>
+    <div class="stage-info"><div class="stage-name">6 — Mix the beat</div><div class="stage-hint">Clean, balanced, translates anywhere.</div></div>
+    <div class="badge" style="background:#1abc9c22;color:#1abc9c">Mix</div>
+    <i class="ti ti-chevron-down chev" aria-hidden="true"></i>
+  </div>
+  <div class="stage-body">
+    <div class="step"><div class="sdot" style="background:#1abc9c"></div><div><div class="stitle">Gain staging first</div><div class="sdetail">Every track peaks -12 to -6dB before any plugins. This is the foundation. Most beginners skip it and wonder why the mix sounds crushed.</div></div></div>
+    <div class="step"><div class="sdot" style="background:#1abc9c"></div><div><div class="stitle">EQ every track — cut before boost</div><div class="sdetail">High-pass all non-bass instruments below 80Hz. Cut 200-400Hz mud where needed. Each element gets its own frequency space.</div><div class="chips"><span class="chip">Ableton EQ Eight</span><span class="chip">iZotope</span></div></div></div>
+    <div class="step"><div class="sdot" style="background:#1abc9c"></div><div><div class="stitle">Pan for width, check in mono</div><div class="sdetail">Kick/snare/bass → centre. Pads/harmonies → ±40-70%. Check mono every 10 mins. If something disappears in mono it only exists in stereo — that's a problem on clubs and phones.</div></div></div>
+    <div class="step"><div class="sdot" style="background:#1abc9c"></div><div><div class="stitle">The car test</div><div class="sdetail">Phone speaker + ESI monitor + earphones. Sounds good on all three = the mix works.</div></div></div>
+  </div>
+</div>
+<div class="conn">↓</div>
+<div class="stage" style="border-color:rgba(231,76,60,0.3)">
+  <div class="stage-hdr" onclick="tog(this)">
+    <div class="stage-icon" style="background:#e74c3c22">🎤</div>
+    <div class="stage-info"><div class="stage-name">7 — Final vocal recording</div><div class="stage-hint">On the real beat. Full performance.</div></div>
+    <div class="badge" style="background:#e74c3c22;color:#e74c3c">The real take</div>
+    <i class="ti ti-chevron-down chev" aria-hidden="true"></i>
+  </div>
+  <div class="stage-body">
+    <div class="step"><div class="sdot" style="background:#e74c3c"></div><div><div class="stitle">Re-record everything fresh</div><div class="sdetail">Don't keep demo vocals. 3-5 takes per section minimum. Your timing and energy lock into the real beat naturally.</div></div></div>
+    <div class="step"><div class="sdot" style="background:#e74c3c"></div><div><div class="stitle">Double-track the chorus</div><div class="sdetail">Record chorus lead twice, pan ±15-20%. Makes the chorus feel wider and more powerful. Free and one of the most effective professional tricks in RnB.</div></div></div>
+    <div class="step"><div class="sdot" style="background:#e74c3c"></div><div><div class="stitle">Stack harmonies and ad-libs</div><div class="sdetail">3-part harmony on chorus. Whisper ad-libs, high falsetto, low backing tone — each on its own track for individual control.</div></div></div>
+  </div>
+</div>
+<div class="conn">↓</div>
+<div class="stage" style="border-color:rgba(233,30,140,0.3)">
+  <div class="stage-hdr" onclick="tog(this)">
+    <div class="stage-icon" style="background:#e91e8c22">✨</div>
+    <div class="stage-info"><div class="stage-name">8 — Mix & master vocal + beat</div><div class="stage-hint">The finished record.</div></div>
+    <div class="badge" style="background:#e91e8c22;color:#e91e8c">Final</div>
+    <i class="ti ti-chevron-down chev" aria-hidden="true"></i>
+  </div>
+  <div class="stage-body">
+    <div class="step"><div class="sdot" style="background:#e91e8c"></div><div><div class="stitle">Vocal chain</div><div class="sdetail">Auto-Tune (Retune 20-40) → EQ (high-pass 80Hz, cut 2-4kHz harshness, boost 12-16kHz air) → Compress (3:1, attack 10ms, release 80ms, 4-6dB reduction) → Reverb send → Delay send.</div><div class="chips"><span class="chip">Antares Auto-Tune</span><span class="chip">Ableton EQ Eight</span><span class="chip">Ableton Compressor</span><span class="chip">iZotope</span></div></div></div>
+    <div class="step"><div class="sdot" style="background:#e91e8c"></div><div><div class="stitle">Carve space for the vocal in the beat</div><div class="sdetail">Cut the beat's 1-3kHz slightly where the vocal lives — this makes space so the voice cuts through without competing with instruments.</div></div></div>
+    <div class="step"><div class="sdot" style="background:#e91e8c"></div><div><div class="stitle">Master to Spotify standard</div><div class="sdetail">Target: -14 LUFS integrated, -1dBTP true peak. iZotope Ozone's Master Assistant gets you there as a starting point.</div><div class="chips"><span class="chip">iZotope Ozone</span></div></div></div>
+  </div>
+</div>
+<div class="conn">↓</div>
+<div class="phase-lbl"><div class="phase-line"></div><div class="phase-text">Phase 3 — release</div><div class="phase-line"></div></div>
+<div class="stage" style="border-color:rgba(243,156,18,0.3)">
+  <div class="stage-hdr" onclick="tog(this)">
+    <div class="stage-icon" style="background:#e67e2222">🚀</div>
+    <div class="stage-info"><div class="stage-name">9 — Monetise & release</div><div class="stage-hint">No drop without this system.</div></div>
+    <div class="badge" style="background:#e67e2222;color:#f39c12">Release</div>
+    <i class="ti ti-chevron-down chev" aria-hidden="true"></i>
+  </div>
+  <div class="stage-body">
+    <div class="step"><div class="sdot" style="background:#e67e22"></div><div><div class="stitle">Register with PRS + MCPS</div><div class="sdetail">Both free to join in UK. Every stream and radio play earns money only if registered. Do once, covers all future releases.</div><div class="chips"><span class="chip">PRS for Music</span><span class="chip">MCPS</span></div></div></div>
+    <div class="step"><div class="sdot" style="background:#e67e22"></div><div><div class="stitle">Distribute via DistroKid</div><div class="sdetail">£20/year, unlimited releases, 100% royalties. Submit 7 days before release — opens Spotify editorial pitch window.</div><div class="chips"><span class="chip">DistroKid</span></div></div></div>
+    <div class="step"><div class="sdot" style="background:#e67e22"></div><div><div class="stitle">Pitch Spotify editorial + 4 videos ready</div><div class="sdetail">Spotify for Artists: fill every field. Videographer: 4×30s clips = £300, 4 looks, release 1/week for 4 weeks while the algorithm is warm.</div></div></div>
+  </div>
+</div>
+</div>
+
+<!-- TRACKS -->
+<div class="screen" id="screen-tracks">
+  <div id="tracks-list"></div>
+  <button class="add-btn" onclick="showModal()">+ Start tracking a new song</button>
+  <div style="margin:0 14px 10px;padding:10px 14px;background:var(--bg2);border-radius:12px;border:0.5px solid var(--border);font-size:11px;color:var(--muted);line-height:1.6">Tap a stage to mark it started or done. Dates and time spent are recorded automatically. After 3 songs completed end to end you will have the full skill set.</div>
+</div>
+
+<!-- TRENDS -->
+<div class="screen" id="screen-trends">
+  <div style="margin:0 14px 10px;padding:10px 14px;background:var(--bg2);border-radius:12px;border:0.5px solid var(--border);font-size:12px;color:var(--muted);line-height:1.5">Track at least 2 songs to see trends. Complete more stages for richer data.</div>
+  <div class="card">
+    <div class="card-hdr"><span class="card-title">Overview</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px 14px" id="trends-overview"></div>
+  </div>
+  <div class="card">
+    <div class="card-hdr"><span class="card-title">Average days per stage</span><span style="font-size:11px;color:var(--muted)">Where you slow down</span></div>
+    <div class="bar-wrap" id="trends-bars" style="padding:10px 14px"></div>
+  </div>
+  <div class="card">
+    <div class="card-hdr"><span class="card-title">Song comparison</span><span style="font-size:11px;color:var(--muted)">Are you getting faster?</span></div>
+    <div id="trends-songs"></div>
+  </div>
+  <div class="card">
+    <div class="card-hdr"><span class="card-title">Export for Claude analysis</span></div>
+    <div style="padding:12px 14px;display:flex;flex-direction:column;gap:8px">
+      <div style="font-size:12px;color:var(--muted);line-height:1.5">Generate a full data snapshot — paste into Claude to get analysis on where you're getting stuck and how to speed up.</div>
+      <button style="background:var(--red);color:#fff;border:none;border-radius:10px;padding:12px;font-size:13px;font-weight:700;cursor:pointer" onclick="genExport()">Generate export</button>
+      <div id="export-wrap" style="display:none">
+        <div id="export-text" style="background:var(--bg3);border:0.5px solid var(--border2);border-radius:8px;padding:10px;font-size:11px;color:var(--muted);font-family:-apple-system,sans-serif;white-space:pre-wrap;max-height:150px;overflow-y:auto;margin-bottom:8px"></div>
+        <button style="background:var(--bg3);color:var(--text);border:0.5px solid var(--border2);border-radius:10px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;width:100%" onclick="copyExport()">Copy & paste into Claude ↗</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LEARN -->
+<div class="screen" id="screen-learn">
+  <div style="margin:0 14px 12px;padding:10px 14px;background:var(--bg2);border-radius:12px;border:0.5px solid var(--border);font-size:12px;color:var(--muted);line-height:1.6">You don't need to be a producer. Just enough to make a sketch that inspires you to write. These are the only skills that matter for your goal.</div>
+  <div class="learn-card">
+    <div class="learn-hdr" onclick="togL(this)"><div><div class="learn-title">RnB drum basics</div><div class="learn-sub">The only drum knowledge you need · Week 1-2</div></div><i class="ti ti-chevron-down chev open" aria-hidden="true"></i></div>
+    <div class="learn-body open">
+      <div class="learn-item">Kick on 1 and 3. Snare on 2 and 4. Hi-hat every 8th note. This is every RnB song ever made.</div>
+      <div class="learn-item">Add swing: right-click MIDI clip → Groove → 8B Swing. Makes drums feel human instead of robotic.</div>
+      <div class="learn-item">Ghost notes: quiet snare hits between main beats at 30-50% velocity. Adds groove texture.</div>
+      <div class="learn-item">Don't use pre-made loops for the first 2 weeks. Program by hand. Your ear learns faster.</div>
+      <div class="learn-item">Study 3 RnB songs you love — listen ONLY to the drums and rebuild each pattern from scratch.</div>
+    </div>
+  </div>
+  <div class="learn-card">
+    <div class="learn-hdr" onclick="togL(this)"><div><div class="learn-title">Kick & bass relationship</div><div class="learn-sub">Biggest gap between amateur and pro · Week 3-4</div></div><i class="ti ti-chevron-down chev" aria-hidden="true"></i></div>
+    <div class="learn-body">
+      <div class="learn-item">Where the kick hits the bass should be silent or very short. They fight for the same frequency space.</div>
+      <div class="learn-item">Sidechain compression: compressor on bass, sidechain input = kick. Bass ducks every time kick hits. This is what makes RnB feel punchy and professional.</div>
+      <div class="learn-item">Check in mono — if the low end gets muddy, kick and bass are clashing. Fix timing before EQ.</div>
+      <div class="learn-item">Kick EQ: boost 60-80Hz (thump), cut 300-400Hz (mud), boost 3-5kHz (click).</div>
+      <div class="learn-item">Bass EQ: high-pass below 35Hz, boost 80-100Hz warmth, cut 200-300Hz mud.</div>
+    </div>
+  </div>
+  <div class="learn-card">
+    <div class="learn-hdr" onclick="togL(this)"><div><div class="learn-title">RnB chord flavours</div><div class="learn-sub">Your piano lessons directly feed this</div></div><i class="ti ti-chevron-down chev" aria-hidden="true"></i></div>
+    <div class="learn-body">
+      <div class="learn-item">Minor 7ths (Cmin7 = C Eb G Bb) — melancholy, introspective. Most common in RnB.</div>
+      <div class="learn-item">Major 9ths (Fmaj9 = F A C E G) — warm, hopeful, dreamy. SZA energy.</div>
+      <div class="learn-item">Suspended 2nds (Gsus2 = G A D) — unresolved tension. Perfect for pre-choruses.</div>
+      <div class="learn-item">Stay in one key. Play a chord you like — then only use notes that sound good with it.</div>
+      <div class="learn-item">Play the top note of the chord slightly louder than the others. Brings out melody in the harmony.</div>
+    </div>
+  </div>
+  <div class="learn-card">
+    <div class="learn-hdr" onclick="togL(this)"><div><div class="learn-title">Free tools to get now</div><div class="learn-sub">Zero cost upgrades</div></div><i class="ti ti-chevron-down chev" aria-hidden="true"></i></div>
+    <div class="learn-body">
+      <div class="learn-item">Spitfire LABS (labs.spitfireaudio.com) — Felt Piano and Soft Piano are perfect for RnB demos. Free.</div>
+      <div class="learn-item">Splice (splice.com) — free tier for drum samples. Use for drums only at first.</div>
+      <div class="learn-item">Vochlea Dubler — you already have it. Hum melodies and bass lines → converts to MIDI in Ableton.</div>
+      <div class="learn-item">Looperman.com — free loops and samples, no copyright issues.</div>
+    </div>
+  </div>
+  <div class="learn-card">
+    <div class="learn-hdr" onclick="togL(this)"><div><div class="learn-title">Mixing basics</div><div class="learn-sub">Learn on the job, song by song</div></div><i class="ti ti-chevron-down chev" aria-hidden="true"></i></div>
+    <div class="learn-body">
+      <div class="learn-item">Gain staging: every track peaks -12 to -6dB before any plugins. Foundation of everything.</div>
+      <div class="learn-item">High-pass every non-bass track below 80-100Hz. Do this first on every track, every time.</div>
+      <div class="learn-item">The car test: phone speaker + ESI monitor + earphones. All three = mix works.</div>
+      <div class="learn-item">-14 LUFS is the Spotify standard. iZotope Ozone's Master Assistant gets you there automatically.</div>
+      <div class="learn-item">Cut beat's 1-3kHz slightly where the vocal lives — carves space so voice cuts through without competing.</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- scroll -->
+
+<!-- MODAL -->
+<div class="modal" id="modal" style="display:none">
+  <div class="modal-box">
+    <div class="modal-title">New song</div>
+    <input class="std-input" id="new-name" placeholder="Song name or working title...">
+    <button class="mbtn mbtn-confirm" onclick="addTrack()">Start tracking</button>
+    <button class="mbtn mbtn-cancel" onclick="hideModal()">Cancel</button>
+  </div>
+</div>
+
+</div><!-- app -->
+<script>
+const STAGES=[
+  {name:'Chords & feeling',phase:1,color:'#c0392b'},
+  {name:'Rough drums & bass',phase:1,color:'#3498db'},
+  {name:'Write lyrics',phase:1,color:'#27ae60'},
+  {name:'Demo vocal',phase:1,color:'#f39c12'},
+  {name:'Complete the beat',phase:2,color:'#9b59b6'},
+  {name:'Mix the beat',phase:2,color:'#1abc9c'},
+  {name:'Final vocal recording',phase:2,color:'#e74c3c'},
+  {name:'Mix & master',phase:2,color:'#e91e8c'},
+  {name:'Release',phase:3,color:'#f39c12'}
+];
+
+function switchTab(n){
+  ['process','tracks','trends','learn'].forEach(s=>{
+    document.getElementById('screen-'+s).classList.toggle('active',s===n);
+  });
+  document.querySelectorAll('.tab-pill').forEach((el,i)=>{
+    el.classList.toggle('active',['process','tracks','trends','learn'][i]===n);
+  });
+  if(n==='trends')renderTrends();
+}
+
+function tog(hdr){
+  const b=hdr.nextElementSibling,c=hdr.querySelector('.chev');
+  const o=b.classList.contains('open');
+  b.classList.toggle('open',!o);c.classList.toggle('open',!o);
+}
+function togL(hdr){
+  const b=hdr.nextElementSibling,c=hdr.querySelector('.chev');
+  const o=b.classList.contains('open');
+  b.classList.toggle('open',!o);c.classList.toggle('open',!o);
+}
+
+// DATA
+function getTracks(){try{return JSON.parse(localStorage.getItem('svd_music_tracks')||'[]')}catch(e){return[]}}
+function saveTracks(t){try{localStorage.setItem('svd_music_tracks',JSON.stringify(t))}catch(e){}}
+
+function daysBetween(a,b){return Math.round(Math.abs(new Date(b)-new Date(a))/(1000*60*60*24));}
+function today(){return new Date().toISOString().slice(0,10);}
+function fmtDate(d){if(!d)return'—';const dt=new Date(d);return dt.toLocaleDateString('en-GB',{day:'numeric',month:'short'});}
+
+function renderTracks(){
+  const tracks=getTracks();
+  const c=document.getElementById('tracks-list');
+  if(!tracks.length){
+    c.innerHTML='<div style="margin:0 14px 10px;padding:24px;text-align:center;color:var(--dim);font-size:13px;background:var(--bg2);border-radius:16px;border:0.5px solid var(--border)">No songs tracked yet.<br>Add your first one below.</div>';
+    return;
+  }
+  c.innerHTML=tracks.map((t,ti)=>{
+    const done=t.stages.filter(s=>s.done).length;
+    const pct=Math.round(done/9*100);
+    const col=STAGES[Math.min(done,8)].color;
+    const totalDays=t.stages.reduce((acc,s)=>{
+      if(s.startDate&&s.doneDate)return acc+daysBetween(s.startDate,s.doneDate);
+      return acc;
+    },0);
+    return `<div class="track-card">
+      <div class="track-top" onclick="togTrack(${ti})">
+        <div class="track-name-row">
+          <div class="track-name">${t.name}</div>
+          <div class="track-pct" style="color:${col}">${pct}%</div>
+        </div>
+        <div class="track-meta">${done}/9 stages complete · ${totalDays>0?totalDays+' days total':done>0?'in progress':'not started'}</div>
+        <div class="prog-bar"><div class="prog-fill" style="width:${pct}%;background:${col}"></div></div>
+      </div>
+      <div class="track-stages" id="ts-${ti}">
+        ${STAGES.map((s,si)=>{
+          const st=t.stages[si];
+          const days=st.startDate&&st.doneDate?daysBetween(st.startDate,st.doneDate):null;
+          const inProg=st.startDate&&!st.done;
+          const daysSinceStart=inProg?daysBetween(st.startDate,today()):null;
+          return `<div class="ts-row" onclick="toggleStage(${ti},${si})">
+            <div class="ts-check${st.done?' done':''}"></div>
+            <div class="ts-info">
+              <div class="ts-label${st.done?' done':''}">${si+1}. ${s.name}</div>
+              <div class="ts-dates">${st.startDate?'Started: '+fmtDate(st.startDate):'Not started'}${st.doneDate?' · Done: '+fmtDate(st.doneDate):''}</div>
+            </div>
+            ${days!==null?`<div class="ts-days" style="background:${s.color}22;color:${s.color}">${days}d</div>`:inProg?`<div class="ts-days" style="background:#f39c1222;color:#f39c12">${daysSinceStart}d…</div>`:''}
+          </div>`;
+        }).join('')}
+        <div style="padding:8px 14px;display:flex;justify-content:flex-end">
+          <button onclick="deleteTrack(${ti})" style="font-size:11px;color:var(--dim);background:none;border:none;cursor:pointer">Delete song</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function togTrack(i){
+  const el=document.getElementById('ts-'+i);
+  el.style.display=el.style.display==='block'?'none':'block';
+}
+
+function toggleStage(ti,si){
+  const tracks=getTracks();
+  const s=tracks[ti].stages[si];
+  if(!s.startDate){
+    s.startDate=today();
+  } else if(!s.done){
+    s.done=true;
+    s.doneDate=today();
+  } else {
+    // undo
+    s.done=false;
+    s.doneDate=null;
+  }
+  saveTracks(tracks);
+  renderTracks();
+  setTimeout(()=>{const el=document.getElementById('ts-'+ti);if(el)el.style.display='block';},30);
+}
+
+function deleteTrack(ti){
+  if(!confirm('Delete this song?'))return;
+  const t=getTracks();t.splice(ti,1);saveTracks(t);renderTracks();
+}
+
+function showModal(){document.getElementById('modal').style.display='flex';}
+function hideModal(){document.getElementById('modal').style.display='none';}
+function addTrack(){
+  const name=document.getElementById('new-name').value.trim();
+  if(!name)return;
+  const tracks=getTracks();
+  tracks.push({name,stages:STAGES.map(()=>({done:false,startDate:null,doneDate:null}))});
+  saveTracks(tracks);renderTracks();hideModal();
+  document.getElementById('new-name').value='';
+  switchTab('tracks');
+}
+
+// TRENDS
+function renderTrends(){
+  const tracks=getTracks();
+  const completed=tracks.filter(t=>t.stages.filter(s=>s.done).length>0);
+
+  // Overview stats
+  const totalSongs=tracks.length;
+  const completedSongs=tracks.filter(t=>t.stages.every(s=>s.done)).length;
+  const allDays=tracks.flatMap(t=>t.stages.filter(s=>s.startDate&&s.doneDate).map(s=>daysBetween(s.startDate,s.doneDate)));
+  const avgDayPerStage=allDays.length>0?Math.round(allDays.reduce((a,b)=>a+b,0)/allDays.length):0;
+  const slowestSi=getSlowestStage(tracks);
+
+  document.getElementById('trends-overview').innerHTML=`
+    <div class="trend-stat"><div class="trend-val">${totalSongs}</div><div class="trend-lbl">Songs tracked</div></div>
+    <div class="trend-stat"><div class="trend-val">${completedSongs}</div><div class="trend-lbl">Fully completed</div></div>
+    <div class="trend-stat"><div class="trend-val">${avgDayPerStage}d</div><div class="trend-lbl">Avg days/stage</div></div>
+    <div class="trend-stat"><div class="trend-val" style="font-size:13px">${slowestSi>=0?STAGES[slowestSi].name.split(' ')[0]+'…':'—'}</div><div class="trend-lbl">Slowest stage</div></div>`;
+
+  // Bars per stage
+  const maxDays=Math.max(1,...STAGES.map((_,si)=>avgForStage(tracks,si)));
+  document.getElementById('trends-bars').innerHTML=STAGES.map((s,si)=>{
+    const avg=avgForStage(tracks,si);
+    const w=avg>0?Math.round(avg/maxDays*100):0;
+    const isSlowest=si===slowestSi;
+    return `<div class="bar-row">
+      <div class="bar-label" style="color:${isSlowest?s.color:'var(--muted)'};font-weight:${isSlowest?700:400}">${si+1}. ${s.name.split(' ').slice(0,2).join(' ')}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${w}%;background:${s.color}"></div></div>
+      <div class="bar-val" style="color:${s.color}">${avg>0?avg+'d':'—'}</div>
+    </div>`;
+  }).join('');
+
+  // Song comparison
+  if(tracks.length<2){
+    document.getElementById('trends-songs').innerHTML='<div style="padding:14px;font-size:12px;color:var(--dim);text-align:center">Track at least 2 songs to compare speed</div>';
+  } else {
+    document.getElementById('trends-songs').innerHTML=tracks.map((t,i)=>{
+      const doneSt=t.stages.filter(s=>s.done).length;
+      const totalD=t.stages.reduce((acc,s)=>s.startDate&&s.doneDate?acc+daysBetween(s.startDate,s.doneDate):acc,0);
+      const col=STAGES[Math.min(doneSt,8)].color;
+      return `<div class="song-compare-row">
+        <div><div style="font-size:13px;font-weight:600;color:var(--text)">Song ${i+1}: ${t.name}</div><div style="font-size:11px;color:var(--muted);margin-top:2px">${doneSt}/9 stages</div></div>
+        <div style="text-align:right"><div style="font-size:14px;font-weight:700;color:${col}">${totalD>0?totalD+'d total':'in progress'}</div><div style="font-size:10px;color:var(--dim);margin-top:2px">${doneSt>0?Math.round(totalD/doneSt)+'d avg/stage':'—'}</div></div>
+      </div>`;
+    }).join('');
+  }
+}
+
+function avgForStage(tracks,si){
+  const days=tracks.map(t=>t.stages[si]).filter(s=>s.startDate&&s.doneDate).map(s=>daysBetween(s.startDate,s.doneDate));
+  if(!days.length)return 0;
+  return Math.round(days.reduce((a,b)=>a+b,0)/days.length);
+}
+function getSlowestStage(tracks){
+  let max=-1,idx=-1;
+  STAGES.forEach((_,si)=>{const a=avgForStage(tracks,si);if(a>max){max=a;idx=si;}});
+  return max>0?idx:-1;
+}
+
+// EXPORT
+function genExport(){
+  const tracks=getTracks();
+  let txt='SVD MUSIC PROCESS DATA EXPORT\nGenerated: '+today()+'\n\n';
+  txt+='=== SONGS ===\n';
+  tracks.forEach((t,i)=>{
+    const done=t.stages.filter(s=>s.done).length;
+    txt+='\nSong '+(i+1)+': '+t.name+'\n';
+    txt+='Progress: '+done+'/9 stages\n';
+    t.stages.forEach((s,si)=>{
+      if(s.startDate){
+        const days=s.doneDate?daysBetween(s.startDate,s.doneDate)+'d':daysBetween(s.startDate,today())+'d (in progress)';
+        txt+='  Stage '+(si+1)+' ('+STAGES[si].name+'): '+days+'\n';
+      }
+    });
+  });
+  txt+='\n=== SLOWEST STAGES ===\n';
+  STAGES.forEach((_,si)=>{const a=avgForStage(tracks,si);if(a>0)txt+='Stage '+(si+1)+' ('+STAGES[si].name+'): avg '+a+' days\n';});
+  txt+='\n=== REQUEST ===\nAnalyse this data. Where am I getting stuck? Which stages take longest? Am I getting faster across songs? What should I focus on to speed up my process?';
+  document.getElementById('export-text').textContent=txt;
+  document.getElementById('export-wrap').style.display='block';
+}
+function copyExport(){
+  navigator.clipboard.writeText(document.getElementById('export-text').textContent)
+    .then(()=>alert('Copied! Paste into Claude.'));
+}
+
+renderTracks();
+</script>
+</body>
+</html>
