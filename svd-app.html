@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SVD">
+<meta name="theme-color" content="#0a0000">
+<title>SVD</title>
+<style>
+:root {
+  --bg: #0a0000;
+  --bg2: #140808;
+  --bg3: #1e0e0e;
+  --bg4: #2a1212;
+  --red: #c0392b;
+  --red-bright: #e74c3c;
+  --red-soft: rgba(192,57,43,0.15);
+  --red-glow: rgba(231,76,60,0.08);
+  --text: #f5ede8;
+  --muted: rgba(245,237,232,0.5);
+  --dim: rgba(245,237,232,0.25);
+  --border: rgba(192,57,43,0.2);
+  --border2: rgba(192,57,43,0.35);
+  --green: #2ecc71;
+  --amber: #f39c12;
+  --blue: #3498db;
+  --pink-bg: #1a0a14;
+  --pink-bg2: #240d1c;
+  --pink-bg3: #2e1025;
+  --pink: #e91e8c;
+  --pink-bright: #ff4db8;
+  --pink-soft: rgba(233,30,140,0.15);
+  --pink-border: rgba(233,30,140,0.25);
+  --safe-top: env(safe-area-inset-top, 44px);
+  --safe-bottom: env(safe-area-inset-bottom, 20px);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; background: var(--bg); font-family: -apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif; color: var(--text); }
+.app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+.status-bar { height: var(--safe-top); background: var(--bg); flex-shrink: 0; }
+
+/* NAV */
+.bottom-nav { 
+  display: flex; background: var(--bg2); border-top: 0.5px solid var(--border);
+  padding-bottom: var(--safe-bottom); flex-shrink: 0;
+}
+.nav-btn {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  padding: 10px 4px 6px; gap: 4px; background: none; border: none;
+  color: var(--dim); font-size: 10px; cursor: pointer; transition: color 0.2s;
+  font-family: -apple-system, 'SF Pro Display', sans-serif; letter-spacing: 0.5px;
+}
+.nav-btn.active { color: var(--red-bright); }
+.nav-btn svg { width: 22px; height: 22px; stroke-width: 1.5; }
+
+/* PAGES */
+.page { display: none; flex: 1; overflow: hidden; flex-direction: column; background: var(--bg); }
+.page.active { display: flex; }
+.page.pink-page { background: var(--pink-bg); }
+
+/* SCROLL AREA */
+.scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.scroll::-webkit-scrollbar { display: none; }
+
+/* PAGE HEADER */
+.page-header { padding: 20px 20px 16px; flex-shrink: 0; }
+.page-header h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; }
+.page-header h1 span { color: var(--red-bright); }
+.page-header h1 span.pink { color: var(--pink-bright); }
+.page-header p { font-size: 12px; color: var(--muted); margin-top: 3px; letter-spacing: 0.3px; }
+
+/* TAB BAR */
+.tab-bar { display: flex; gap: 6px; padding: 0 20px 16px; overflow-x: auto; flex-shrink: 0; scrollbar-width: none; }
+.tab-bar::-webkit-scrollbar { display: none; }
+.tab { padding: 7px 14px; border-radius: 20px; border: 0.5px solid var(--border2); font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; background: var(--bg3); color: var(--muted); letter-spacing: 0.3px; transition: all 0.2s; }
+.tab.active { background: var(--red); color: #fff; border-color: var(--red); }
+.tab.pink-tab { border-color: var(--pink-border); background: var(--pink-bg2); }
+.tab.pink-tab.active { background: var(--pink); border-color: var(--pink); color: #fff; }
+
+/* CARDS */
+.card {
+  margin: 0 16px 12px; background: var(--bg2);
+  border: 0.5px solid var(--border); border-radius: 16px; overflow: hidden;
+}
+.card.pink-card { background: var(--pink-bg2); border-color: var(--pink-border); }
+.card-header { padding: 14px 16px 10px; border-bottom: 0.5px solid var(--border); display: flex; align-items: center; gap: 8px; }
+.card.pink-card .card-header { border-bottom-color: var(--pink-border); }
+.card-header .label { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; color: var(--red); text-transform: uppercase; }
+.card.pink-card .card-header .label { color: var(--pink-bright); }
+.card-header .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--red); flex-shrink: 0; }
+.card.pink-card .card-header .dot { background: var(--pink); }
+
+/* PHASE ITEMS */
+.phase-block { padding: 12px 16px; border-bottom: 0.5px solid var(--border); }
+.phase-block:last-child { border-bottom: none; }
+.phase-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+.phase-date { font-size: 11px; color: var(--red-bright); margin-bottom: 8px; font-weight: 600; }
+.phase-item { font-size: 12px; color: var(--muted); padding: 3px 0; display: flex; gap: 8px; line-height: 1.4; }
+.phase-item::before { content: "→"; color: var(--red); flex-shrink: 0; font-size: 11px; margin-top: 1px; }
+
+/* TASK ROW */
+.task-row { display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px; border-bottom: 0.5px solid var(--border); }
+.task-row:last-child { border-bottom: none; }
+.task-row input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--red); margin-top: 1px; flex-shrink: 0; cursor: pointer; border-radius: 4px; }
+.task-row label { font-size: 13px; color: var(--text); line-height: 1.4; cursor: pointer; flex: 1; }
+.task-row label.done { color: var(--dim); text-decoration: line-through; }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 700; letter-spacing: 0.5px; margin-left: 6px; vertical-align: middle; }
+.badge-red { background: var(--red-soft); color: var(--red-bright); }
+.badge-amber { background: rgba(243,156,18,0.15); color: var(--amber); }
+.badge-green { background: rgba(46,204,113,0.12); color: var(--green); }
+
+/* METRIC GRID */
+.metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 14px 16px; }
+.metric { background: var(--bg3); border-radius: 12px; padding: 12px; border: 0.5px solid var(--border); }
+.metric .val { font-size: 22px; font-weight: 800; color: var(--text); letter-spacing: -0.5px; }
+.metric .lbl { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.metric .target { font-size: 10px; color: var(--red); margin-top: 4px; font-weight: 600; }
+.progress-wrap { padding: 0 16px 14px; }
+.progress-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+.progress-bar { height: 4px; background: var(--bg4); border-radius: 2px; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--red); border-radius: 2px; transition: width 0.6s ease; }
+
+/* BUDGET */
+.budget-row { display: flex; justify-content: space-between; align-items: center; padding: 11px 16px; border-bottom: 0.5px solid var(--border); font-size: 13px; }
+.budget-row:last-child { border-bottom: none; }
+.budget-row .amt { font-weight: 700; color: var(--red-bright); }
+
+/* CONTENT BADGE */
+.day-badge { padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; flex-shrink: 0; }
+.day-mon { background: var(--red); color: #fff; }
+.day-wed { background: var(--red-soft); color: var(--red-bright); }
+.day-fri { background: rgba(52,152,219,0.15); color: var(--blue); }
+.day-snap { background: rgba(243,156,18,0.15); color: var(--amber); }
+
+/* WEEKLY REVIEW INPUTS */
+.review-row { display: flex; align-items: center; justify-content: space-between; padding: 11px 16px; border-bottom: 0.5px solid var(--pink-border); gap: 10px; }
+.review-row:last-child { border-bottom: none; }
+.review-row-left .rl { font-size: 13px; color: var(--text); }
+.review-row-left .rs { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.num-in { width: 72px; font-size: 13px; padding: 6px 10px; border: 0.5px solid var(--pink-border); border-radius: 8px; background: var(--pink-bg3); color: var(--text); text-align: right; font-family: -apple-system, sans-serif; }
+.num-in:focus { outline: none; border-color: var(--pink); }
+.textarea { width: 100%; font-size: 13px; padding: 10px 12px; border: 0.5px solid var(--pink-border); border-radius: 10px; background: var(--pink-bg3); color: var(--text); resize: none; font-family: -apple-system, sans-serif; line-height: 1.5; }
+.textarea:focus { outline: none; border-color: var(--pink); }
+.pad { padding: 14px 16px; }
+.pad-label { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; color: var(--pink-bright); text-transform: uppercase; margin-bottom: 10px; }
+.text-in { width: 100%; font-size: 13px; padding: 10px 12px; border: 0.5px solid var(--pink-border); border-radius: 10px; background: var(--pink-bg3); color: var(--text); font-family: -apple-system, sans-serif; margin-bottom: 8px; }
+.text-in:focus { outline: none; border-color: var(--pink); }
+
+/* MOOD */
+.mood-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 14px 16px; }
+.mood-btn { padding: 12px 8px; border-radius: 12px; border: 0.5px solid var(--pink-border); background: var(--pink-bg3); color: var(--muted); font-size: 13px; font-weight: 600; cursor: pointer; text-align: center; transition: all 0.2s; font-family: -apple-system, sans-serif; }
+.mood-btn.sel { background: var(--pink-soft); border-color: var(--pink); color: var(--pink-bright); }
+
+/* FOCUS TAGS */
+.focus-wrap { display: flex; flex-wrap: wrap; gap: 6px; padding: 14px 16px; }
+.focus-tag { padding: 6px 14px; border-radius: 20px; border: 0.5px solid var(--pink-border); background: var(--pink-bg3); color: var(--muted); font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.focus-tag.sel { background: var(--pink-soft); border-color: var(--pink); color: var(--pink-bright); }
+
+/* BIG BTN */
+.big-btn { width: calc(100% - 32px); margin: 0 16px 14px; padding: 14px; border-radius: 14px; border: none; font-size: 15px; font-weight: 700; cursor: pointer; letter-spacing: 0.3px; font-family: -apple-system, sans-serif; transition: opacity 0.2s; }
+.big-btn:active { opacity: 0.8; }
+.btn-red { background: var(--red); color: #fff; }
+.btn-pink { background: var(--pink); color: #fff; }
+.btn-outline { background: transparent; color: var(--muted); border: 0.5px solid var(--border); }
+
+/* STEP NAV */
+.step-wrap { display: flex; align-items: center; gap: 6px; padding: 0 20px 16px; }
+.step-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--pink-bg3); border: 0.5px solid var(--pink-border); flex-shrink: 0; transition: all 0.2s; }
+.step-dot.active { background: var(--pink); border-color: var(--pink); width: 20px; border-radius: 3px; }
+.step-dot.done { background: var(--pink-soft); border-color: var(--pink); }
+.step-label { font-size: 12px; color: var(--pink-bright); font-weight: 600; margin-left: 4px; }
+
+/* SUMMARY */
+.sum-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 14px 16px; }
+.sum-card { background: var(--pink-bg3); border: 0.5px solid var(--pink-border); border-radius: 12px; padding: 12px; }
+.sum-card .val { font-size: 20px; font-weight: 800; color: var(--text); }
+.sum-card .lbl { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.check-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; }
+.check-item .icon { font-size: 14px; flex-shrink: 0; }
+
+/* SECTION TAB CONTENT */
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* FINANCE */
+.fin-in { width: 72px; font-size: 13px; padding: 6px 10px; border: 0.5px solid var(--border); border-radius: 8px; background: var(--bg3); color: var(--text); text-align: right; font-family: -apple-system, sans-serif; }
+.fin-in:focus { outline: none; border-color: var(--red); }
+.rev-row { display: flex; align-items: center; justify-content: space-between; padding: 11px 16px; border-bottom: 0.5px solid var(--border); }
+.rev-row:last-child { border-bottom: none; }
+.rev-label { font-size: 13px; color: var(--text); }
+
+.week-sel { padding: 5px 10px; border: 0.5px solid var(--pink-border); border-radius: 8px; background: var(--pink-bg3); color: var(--text); font-size: 12px; font-family: -apple-system, sans-serif; }
+</style>
+</head>
+<body>
+<div class="app">
+<div class="status-bar"></div>
+
+<!-- ROADMAP PAGE -->
+<div class="page active" id="page-roadmap">
+  <div class="page-header">
+    <h1>SVD <span>ROADMAP</span></h1>
+    <p>Music · Events · Merch · ThinkLeafy · Brand</p>
+  </div>
+  <div class="tab-bar" id="roadmap-tabs">
+    <div class="tab active" onclick="switchTab('roadmap','phases',this)">Phases</div>
+    <div class="tab" onclick="switchTab('roadmap','weekly',this)">Weekly</div>
+    <div class="tab" onclick="switchTab('roadmap','metrics',this)">Metrics</div>
+    <div class="tab" onclick="switchTab('roadmap','budget',this)">Budget</div>
+    <div class="tab" onclick="switchTab('roadmap','checklist',this)">Jul 23</div>
+  </div>
+  <div class="scroll">
+
+    <!-- PHASES -->
+    <div class="tab-content active" id="roadmap-phases">
+      <div class="card">
+        <div class="card-header"><div class="dot"></div><div class="label">Phase 1 — Foundation</div><span class="badge badge-red">Now → Jul 23</span></div>
+        <div class="phase-block">
+          <div class="phase-title">Events & Legal</div>
+          <div class="phase-date">Complete by Jul 23</div>
+          <div class="phase-item">Apply for Personal Licence (APLH exam ~£50 + apply ~£37)</div>
+          <div class="phase-item">Book venue for Jul 23 — max 233 cap</div>
+          <div class="phase-item">Secure alcohol sponsor / supplier</div>
+          <div class="phase-item">Recruit: 2x security, 3x bar staff, 1x photographer</div>
+          <div class="phase-item">Partner with uni student ambassador for crowd</div>
+          <div class="phase-item">Free tickets — capture email at sign-up</div>
+          <div class="phase-item">Design event flyer + QR code for street promo</div>
+          <div class="phase-item">Print & distribute flyers — hit uni campuses 3wks before</div>
+          <div class="phase-item">Fake queue tactic: 20 girls, 2hrs pre-opening</div>
+          <div class="phase-item">Photo installation / moment inside venue</div>
+        </div>
+        <div class="phase-block">
+          <div class="phase-title">Music System</div>
+          <div class="phase-date">Start now</div>
+          <div class="phase-item">Book videographer: 4 clips × 30s = £300/month</div>
+          <div class="phase-item">Plan 4 outfits for shoot — return 3, keep 1</div>
+          <div class="phase-item">Release 1 song/month — monetised before drop</div>
+          <div class="phase-item">Learn to make own beats — producer learns your taste</div>
+          <div class="phase-item">Start weekly piano lessons — document progress</div>
+        </div>
+        <div class="phase-block">
+          <div class="phase-title">ThinkLeafy CBD</div>
+          <div class="phase-date">Source by Jul</div>
+          <div class="phase-item">Find white-label CBD drink (tropical, low sugar, non-carbonated)</div>
+          <div class="phase-item">Sell at events — capture buyer data</div>
+          <div class="phase-item">Find 2–3 retail distribution spots near events</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="dot"></div><div class="label">Phase 2 — Traction</div><span class="badge badge-amber">Aug → Oct</span></div>
+        <div class="phase-block">
+          <div class="phase-title">1 party + 1 gig per month</div>
+          <div class="phase-date">Monthly rhythm</div>
+          <div class="phase-item">£5 entry — spend £20 on drinks = free hat</div>
+          <div class="phase-item">ThinkLeafy sold at every event + online</div>
+          <div class="phase-item">SVD community page grows — feature other artists</div>
+          <div class="phase-item">Launch 1x charity event for blind community</div>
+          <div class="phase-item">Radio show outreach begins</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="dot"></div><div class="label">Phase 3 — Scale</div><span class="badge badge-green">Nov → May 27</span></div>
+        <div class="phase-block">
+          <div class="phase-title">Target: £3,500 profit/month before scaling</div>
+          <div class="phase-date">Unlock to scale</div>
+          <div class="phase-item">Own venue or residency deal secured</div>
+          <div class="phase-item">ThinkLeafy own formulation + website live</div>
+          <div class="phase-item">CBD vapes line launched</div>
+          <div class="phase-item">SVD becomes a label / promotions brand</div>
+          <div class="phase-item">Piano performance at live show</div>
+        </div>
+      </div>
+      <div style="height:20px"></div>
+    </div>
+
+    <!-- WEEKLY -->
+    <div class="tab-content" id="roadmap-weekly">
+      <div class="card">
+        <div class="card-header"><div class="dot"></div><div class="label">Content this week</div></div>
+        <div class="task-row">
+          <div class="day-badge day-mon">MON</div>
+          <label style="font-size:13px;color:var(--text);line-height:1.4">Post music video (from monthly shoot) on Instagram</label>
+        </div>
+        <div class="task-row">
+          <div class="day-badge day-wed">WED</div>
+          <label style="font-size:13px;color:var(--text);line-height:1.4">Post music photo (matching shoot outfit) on Instagram</label>
+        </div>
+        <div class="task-row">
+          <div class="day-badge day-fri">FRI</div>
+          <label style="font-size:13px;color:var(--text);line-height:1.4">Post non-music: piano lesson progress OR personality series</label>
+        </div>
+        <div class="task-row">
+          <div class="day-badge day-snap">SNAP</div>
+          <label style="font-size:13px;color:var(--text);line-height:1.4">Networking event snap (booked start of month)</label>
+        </div>
+        <div class="task-row">
+          <div class="day-badge day-snap">SNAP</div>
+          <label style="font-size:13px;color:var(--text);line-height:1.4">Gym × 2 this week + ThinkLeafy drink promo</label>
+        </div>
+        <div class="task-row">
+          <div class="day-badge day-snap">SNAP</div>
+          <label style="font-size:13px;color:var(--text);line-height:1.4">Repurpose Insta posts as Snapchat stories</label>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="dot"></div><div class="label">Monthly music system</div></div>
+        <div class="task-row"><input type="checkbox"><label>Book videographer: 4 clips × 30s = £300</label></div>
+        <div class="task-row"><input type="checkbox"><label>Order 4 outfits — return 3, keep 1</label></div>
+        <div class="task-row"><input type="checkbox"><label>Release 1 song — monetised, Spotify pitch submitted</label></div>
+        <div class="task-row"><input type="checkbox"><label>4x piano lessons — document progress</label></div>
+        <div class="task-row"><input type="checkbox"><label>Attend 4 networking events (book all at start of month)</label></div>
+        <div class="task-row"><input type="checkbox"><label>1 party hosted + 1 gig performed</label></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="dot"></div><div class="label">Quality rules</div></div>
+        <div class="phase-block" style="border:none">
+          <div class="phase-item">Quality over quantity — every post intentional, planned 4 weeks ahead</div>
+          <div class="phase-item">Instagram: curated, brand-aligned. Snapchat: live, real, motion</div>
+          <div class="phase-item">No track released without monetisation + marketing plan attached</div>
+          <div class="phase-item">Superstar energy — let the work speak. Never over-explain</div>
+          <div class="phase-item">Red & black is the visual language. Never dilute it</div>
+        </div>
+      </div>
+      <div style="height:20px"></div>
+    </div>
+
+    <!-- METRICS -->
+    <div class="tab-content" id="roadmap-metrics">
+      <div class="metric-grid">
+        <div class="metric"><div class="val" id="m-sp">0</div><div class="lbl">Spotify listeners</div><div class="target">Target: 5k by Oct</div></div>
+        <div class="metric"><div class="val" id="m-ig">2,851</div><div class="lbl">Instagram followers</div><div class="target">Target: 10k by Dec</div></div>
+        <div class="metric"><div class="val" id="m-tk">0</div><div class="lbl">Jul 23 tickets</div><div class="target">Target: 200</div></div>
+        <div class="metric"><div class="val" id="m-rv">£0</div><div class="lbl">Monthly revenue</div><div class="target">Scale at £3,500</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="dot"></div><div class="label">Update numbers</div></div>
+        <div class="rev-row"><div class="rev-label">Spotify listeners</div><input class="fin-in" type="number" id="u-sp" placeholder="0"></div>
+        <div class="rev-row"><div class="rev-label">Instagram followers</div><input class="fin-in" type="number" id="u-ig" placeholder="2851"></div>
+        <div class="rev-row"><div class="rev-label">Jul 23 tickets</div><input class="fin-in" type="number" id="u-tk" placeholder="0"></div>
+        <div class="rev-row"><div class="rev-label">Monthly revenue £</div><input class="fin-in" type="number" id="u-rv" placeholder="0"></div>
+      </div>
+      <button class="big-btn btn-red" onclick="updateMetrics()">Update metrics</button>
+      <div class="card">
+        <div class="card-header"><div class="dot"></div><div class="label">Progress to targets</div></div>
+        <div class="progress-wrap" style="padding-top:14px">
+          <div class="progress-label"><span>Spotify (5k)</span><span id="p-sp-lbl">0%</span></div>
+          <div class="progress-bar"><div class="progress-fill" id="p-sp" style="width:0%"></div></div>
+        </div>
+        <div class="progress-wrap">
+          <div class="progress-label"><span>Instagram (10k)</span><span id="p-ig-lbl">28%</span></div>
+          <div class="progress-bar"><div class="progress-fill" id="p-ig" style="width:28%"></div></div>
+        </div>
+        <div class="progress-wrap">
+          <div class="progress-label"><span>Jul 23 tickets (200)</span><span id="p-tk-lbl">0%</span></div>
+          <div class="progress-bar"><div class="progress-fill" id="p-tk" style="width:0%"></div></div>
+        </div>
+        <div class="progress-wrap">
+          <div class="progress-label"><span>Revenue (£3,500)</span><span id="p-rv-lbl">0%</span></div>
+          <div class="progress-bar"><div class="progress-fill" id="p-rv" style="width:0%"></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="dot"></div><div class="label">Watch weekly</div></div>
+        <div class="phase-block" style="border:none">
+          <div class="phase-item">Spotify: listener locations, save rate, playlist adds</div>
+          <div class="phase-item">Instagram: reach per post, profile visits, link clicks</div>
+          <div class="phase-item">Events: ticket sign-ups, emails captured, drink sales</div>
+          <div class="phase-item">Merch: units sold, which items, referral source</div>
+          <div class="phase-item">ThinkLeafy: units moved, reorder rate, retail interest</div>
+        </div>
+      </div>
+      <div style="height:20px"></div>
+    </div>
+
+    <!-- BUDGET -->
+    <div class="tab-content" id="roadmap-budget">
+      <div class="card">
+        <div class="card-header"><div class="dot"></div><div class="label">Monthly system — £600 max</div></div>
+        <div class="budget-row"><span>Videographer (4 clips)</span><span class="amt">£300</span></div>
+        <div class="budget-row"><span>Outfits (net after returns)</span><span class="amt">£60</span></div>
+        <div class="budget-row"><span>Piano lessons × 4</span><span class="amt">£80</span></div>
+        <div class="budget-row"><span>Networking events</span><span class="amt">£40</span></div>
+        <div class="budget-row"><span>Ads (intentional only)</span><span class="amt">£60</span></div>
+        <div class="budget-row"><span>ThinkLeafy stock</span><span class="amt">£60</span></div>
+        <div class="budget-row" style="border-top:1px solid var(--border2);font-weight:700"><span>Total</span><span class="amt" style="font-size:16px">£600</span></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="dot"></div><div class="label">Jul 23 one-time costs</div></div>
+        <div class="budget-row"><span>APLH exam + licence</span><span class="amt">~£87</span></div>
+        <div class="budget-row"><span>Venue deposit</span><span class="amt">~£200</span></div>
+        <div class="budget-row"><span>Flyer print + distribution</span><span class="amt">£50</span></div>
+        <div class="budget-row"><span>Event staff</span><span class="amt">£150</span></div>
+        <div class="budget-row"><span>Venue decoration</span><span class="amt">£80</span></div>
+        <div class="budget-row"><span>Promo girls (2hrs)</span><span class="amt">£100</span></div>
+        <div class="budget-row" style="border-top:1px solid var(--border2);font-weight:700"><span>Estimated total</span><span class="amt" style="font-size:16px">~£667</span></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="dot"></div><div class="label">Revenue streams</div></div>
+        <div class="budget-row"><span>Event drink sales</span><span style="font-size:11px;color:var(--dim)">Jul 23</span></div>
+        <div class="budget-row"><span>Merch (Wix store)</span><span style="font-size:11px;color:var(--dim)">Now</span></div>
+        <div class="budget-row"><span>ThinkLeafy CBD drink</span><span style="font-size:11px;color:var(--dim)">Jul 23</span></div>
+        <div class="budget-row"><span>Spotify streams</span><span style="font-size:11px;color:var(--dim)">Each drop</span></div>
+        <div class="budget-row"><span>Ticket sales</span><span style="font-size:11px;color:var(--dim)">Phase 2+</span></div>
+        <div class="budget-row"><span>Gig / performance fees</span><span style="font-size:11px;color:var(--dim)">Aug+</span></div>
+      </div>
+      <div style="height:20px"></div>
+    </div>
+
+    <!-- CHECKLIST -->
+    <div class="tab-content" id="roadmap-checklist">
+      <div class="card" id="checklist-card">
+        <div class="card-header"><div class="dot"></div><div class="label">Jul 23 — must be done</div><span class="badge badge-red" id="ck-pct-badge">0%</span></div>
+        <div id="ck-items"></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="dot"></div><div class="label">Add a task</div></div>
+        <div style="padding:12px 16px;display:flex;gap:8px">
+          <input type="text" id="new-task-in" placeholder="New task..." style="flex:1;font-size:13px;padding:8px 12px;border:0.5px solid var(--border2);border-radius:10px;background:var(--bg3);color:var(--text);font-family:-apple-system,sans-serif">
+          <button onclick="addTask()" style="padding:8px 16px;border-radius:10px;background:var(--red);color:#fff;border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:-apple-system,sans-serif">Add</button>
+        </div>
+      </div>
+      <div style="height:20px"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- WEEKLY REVIEW PAGE -->
+<div class="page pink-page" id="page-review">
+  <div class="page-header">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div>
+        <h1>WEEKLY <span class="pink">REVIEW</span></h1>
+        <p id="wk-lbl">Week of 1 Jun – 7 Jun</p>
+      </div>
+      <select class="week-sel" id="wk-sel" onchange="setWeekLabel()"></select>
+    </div>
+  </div>
+  <div style="padding:0 20px 14px;display:flex;align-items:center;gap:8px;flex-shrink:0">
+    <div class="step-dot active" id="sd0"></div>
+    <div class="step-dot" id="sd1"></div>
+    <div class="step-dot" id="sd2"></div>
+    <div class="step-dot" id="sd3"></div>
+    <div class="step-dot" id="sd4"></div>
+    <div class="step-dot" id="sd5"></div>
+    <div class="step-dot" id="sd6"></div>
+    <div class="step-label" id="step-lbl">Numbers</div>
+  </div>
+  <div class="scroll" id="review-scroll">
+
+    <!-- STEP 0: NUMBERS -->
+    <div class="tab-content active" id="rev-0">
+      <div class="card pink-card">
+        <div class="card-header"><div class="dot"></div><div class="label">Numbers this week</div></div>
+        <div class="review-row"><div class="review-row-left"><div class="rl">Spotify listeners</div><div class="rs">Monthly listeners on artist page</div></div><input class="num-in" type="number" id="r-sp" placeholder="0"></div>
+        <div class="review-row"><div class="review-row-left"><div class="rl">Spotify streams</div><div class="rs">Total streams this week</div></div><input class="num-in" type="number" id="r-str" placeholder="0"></div>
+        <div class="review-row"><div class="review-row-left"><div class="rl">Instagram followers</div><div class="rs">Current count</div></div><input class="num-in" type="number" id="r-ig" placeholder="2851"></div>
+        <div class="review-row"><div class="review-row-left"><div class="rl">Instagram reach</div><div class="rs">Total reach across posts</div></div><input class="num-in" type="number" id="r-reach" placeholder="0"></div>
+        <div class="review-row"><div class="review-row-left"><div class="rl">Snapchat views</div><div class="rs">Story views average</div></div><input class="num-in" type="number" id="r-snap" placeholder="0"></div>
+        <div class="review-row"><div class="review-row-left"><div class="rl">Wix site visits</div><div class="rs">Merch + event site</div></div><input class="num-in" type="number" id="r-web" placeholder="0"></div>
+        <div class="review-row"><div class="review-row-left"><div class="rl">Jul 23 tickets</div><div class="rs">Running total signed up</div></div><input class="num-in" type="number" id="r-tk" placeholder="0"></div>
+        <div class="review-row"><div class="review-row-left"><div class="rl">Email list size</div><div class="rs">Total captured emails</div></div><input class="num-in" type="number" id="r-em" placeholder="0"></div>
+      </div>
+      <button class="big-btn btn-pink" onclick="goRevStep(1)">Next →</button>
+    </div>
+
+    <!-- STEP 1: CONTENT -->
+    <div class="tab-content" id="rev-1">
+      <div class="card pink-card">
+        <div class="card-header"><div class="dot"></div><div class="label">Content posted</div></div>
+        <div class="task-row"><input type="checkbox" id="rc1"><label for="rc1">Instagram — music video</label></div>
+        <div class="task-row"><input type="checkbox" id="rc2"><label for="rc2">Instagram — music photo</label></div>
+        <div class="task-row"><input type="checkbox" id="rc3"><label for="rc3">Instagram — piano / personality series</label></div>
+        <div class="task-row"><input type="checkbox" id="rc4"><label for="rc4">Snapchat — networking event</label></div>
+        <div class="task-row"><input type="checkbox" id="rc5"><label for="rc5">Snapchat — gym × 2</label></div>
+        <div class="task-row"><input type="checkbox" id="rc6"><label for="rc6">Snapchat — ThinkLeafy promo</label></div>
+        <div class="task-row"><input type="checkbox" id="rc7"><label for="rc7">Insta repurposed to Snapchat</label></div>
+      </div>
+      <div class="card pink-card">
+        <div class="card-header"><div class="dot"></div><div class="label">Best performing post</div></div>
+        <div class="pad"><textarea class="textarea" id="r-best" rows="2" placeholder="Which post did best? What reached most people?"></textarea></div>
+      </div>
+      <div class="card pink-card">
+        <div class="card-header"><div class="dot"></div><div class="label">Content ideas for next month</div></div>
+        <div class="pad"><textarea class="textarea" id="r-ideas" rows="3" placeholder="Ideas, concepts, outfits, shoot themes..."></textarea></div>
+      </div>
+      <div style="display:flex;gap:10px;padding:0 16px 14px">
+        <button class="big-btn btn-outline" style="margin:0" onclick="goRevStep(0)">← Back</button>
+        <button class="big-btn btn-pink" style="margin:0" onclick="goRevStep(2)">Next →</button>
+      </div>
+    </div>
+
+    <!-- STEP 2: EVENTS -->
+    <div class="tab-content" id="rev-2">
+      <div class="card pink-card">
+        <div class="card-header"><div class="dot"></div><div class="label">Events & gigs</div></div>
+        <div class="task-row"><input type="checkbox" id="re1"><label for="re1">Attended a networking event</label></div>
+        <div class="task-row"><input type="checkbox" id="re2"><label for="re2">Performed a gig</label></div>
+        <div class="task-row"><input type="checkbox" id="re3"><label for="re3">Jul 23 progress task completed</label></div>
+        <div class="task-row"><input type="checkbox" id="re4"><label for="re4">Personal licence study done</label></div>
+        <div class="task-row"><input type="checkbox" id="re5"><label for="re5">Venue contact made / confirmed</label></div>
+        <div class="task-row"><input type="checkbox" id="re6"><label for="re6">Flyers distributed or QR shared</label></div>
+        <div class="task-row"><input type="checkbox" id="re7"><label for="re7">Uni ambassador checked in</label></div>
+      </div>
+      <div class="card pink-card">
+        <div class="card-header"><div class="dot"></div><div class="label">Music & piano</div></div>
+        <div class="task-row"><input type="checkbox" id="rm1"><label for="rm1">Piano lesson done</label></div>
+        <div class="task-row"><input type="checkbox" id="rm2"><label for="rm2">Beat / production session</label></div>
+        <div class="task-row"><input type="checkbox" id="rm3"><label for="rm3">Writing session completed</label></div>
+        <div class="task-row"><input type="checkbox" id="rm4"><label for="rm4">Song Spotify editorial pitch submitted</label></div>
+      </div>
+      <div class="card pink-card">
+        <div class="card-header"><div class="dot"></div><div class="label">Notes from events / gigs</div></div>
+        <div class="pad"><textarea class="textarea" id="r-evenotes" rows="3" placeholder="Who did you meet? Connections? Follow-ups?"></textarea></div>
+      </div>
+      <div style="display:flex;gap:10px;padding:0 16px 14px">
+        <button class="big-btn btn-outline" style="margin:0" onclick="goRevStep(1)">← Back</button>
+        <button class="big-btn btn-pink" style="margin:0" onclick="goRevStep(3)">Next →</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: MONEY -->
+    <div class="tab-content" id="rev-3">
+      <div class="card pink-card">
+        <div class="card-header"><div class="dot"></div><div class="label">Money in this week</div></div>
+        <div class="review-row"><div class="review-row-left"><div class="rl">Merch sales</div></div><input class="num-in" type="number" id="f-merch" placeholder="0" oninput="calcNet()"></div>
+        <div class="review-row"><div class="review-row-left"><div class="rl">ThinkLeafy drink sales</div></div><input class="num-in" type="number" id="f-cbd" placeholder="0" oninput="calcNet()"></div>
+        <div class="review-row"><div class="review-row-left"><div class="rl">Gig / performance fee</div></div><input class="num-in" type="number" id="f-gig" placeholder="0" oninput="calcNet()"></div>
+        <div class="review-row"><div class="review-row-left"><div class="rl">Spotify / streaming</div></div><input class="num-in" type="number" id="f-str" placeholder="0" oninput="calcNet()"></div>
+        <div class="review-row" style="border-top:1px solid var(--pink-border)"><div style="font-size:13px;font-weight:700;color:var(--text)">Total in</div><div style="font-size:16px;font-weight:800;color:var(--green)" id="f-in">£0</div></div>
+      </div>
+      <div class="card pink-card">
+        <div class="card-header"><div class="dot"></div><div class="label">Money out this week</div></div>
+        <div class="review-row"><div class="review-row-left"><div class="rl">Videographer / content</div></div><input class="num-in" type="number" id="f-vid" placeholder="0" oninput="calcNet()"></div>
+        <div class="review-row"><div class="review-row-left"><div class="rl">Outfits / clothes</div></div><input class="num-in" type="number" id="f-out" placeholder="0" oninput="calcNet()"></div>
+        <div class="review-row"><div class="review-row-left"><div class="rl">Piano lessons</div></div><input class="num-in" type="number" id="f-pno" placeholder="0" oninput="calcNet()"></div>
+        <div class="review-row"><div class="review-row-left"><div class="rl">Ads / promotion</div></div><input class="num-in" type="number" id="f-ads" placeholder="0" oninput="calcNet()"></div>
+        <div class="review-row"><div class="review-row-left"><div class="rl">Event costs</div></div><input class="num-in" type="number" id="f-evt" placeholder="0" oninput="calcNet()"></div>
+        <div class="review-row"><div class="review-row-left"><div class="rl">ThinkLeafy stock</div></div><input class="num-in" type="number" id="f-stk" placeholder="0" oninput="calcNet()"></div>
+        <div class="review-row" style="border-top:1px solid var(--pink-border)"><div style="font-size:13px;font-weight:700;color:var(--text)">Total out</div><div style="font-size:16px;font-weight:800;color:#e74c3c" id="f-out-total">£0</div></div>
+      </div>
+      <div class="card pink-card" style="margin-bottom:14px">
+        <div style="padding:14px 16px;display:flex;justify-content:space-between;align-items:center">
+          <div><div style="font-size:13px;font-weight:700;color:var(--text)">Net this week</div><div style="font-size:11px;color:var(--muted);margin-top:2px">Scale target: £3,500/month</div></div>
+          <div style="font-size:24px;font-weight:800" id="f-net">£0</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;padding:0 16px 14px">
+        <button class="big-btn btn-outline" style="margin:0" onclick="goRevStep(2)">← Back</button>
+        <button class="big-btn btn-pink" style="margin:0" onclick="goRevStep(4)">Next →</button>
+      </div>
+    </div>
+
+    <!-- STEP 4: MINDSET -->
+    <div class="tab-content" id="rev-4">
+      <div class="card pink-card">
+        <div class="card-header"><div class="dot"></div><div class="label">Energy this week</div></div>
+        <div class="mood-grid">
+          <button class="mood-btn" id="mood-1" onclick="setMood(1)">Low</button>
+          <button class="mood-btn" id="mood-2" onclick="setMood(2)">Okay</button>
+          <button class="mood-btn" id="mood-3" onclick="setMood(3)">Solid</button>
+          <button class="mood-btn" id="mood-4" onclick="setMood(4)">Locked in</button>
+        </div>
+      </div>
+      <div class="card pink-card">
+        <div class="card-header"><div class="dot"></div><div class="label">What worked well?</div></div>
+        <div class="pad"><textarea class="textarea" id="r-good" rows="3" placeholder="Wins, big or small..."></textarea></div>
+      </div>
+      <div class="card pink-card">
+        <div class="card-header"><div class="dot"></div><div class="label">What didn't work?</div></div>
+        <div class="pad"><textarea class="textarea" id="r-bad" rows="3" placeholder="What slipped? What to change?"></textarea></div>
+      </div>
+      <div class="card pink-card">
+        <div class="card-header"><div class="dot"></div><div class="label">1 thing to make this week a 10</div></div>
+        <div class="pad"><textarea class="textarea" id="r-ten" rows="2" placeholder="Be honest..."></textarea></div>
+      </div>
+      <div style="display:flex;gap:10px;padding:0 16px 14px">
+        <button class="big-btn btn-outline" style="margin:0" onclick="goRevStep(3)">← Back</button>
+        <button class="big-btn btn-pink" style="margin:0" onclick="goRevStep(5)">Next →</button>
+      </div>
+    </div>
+
+    <!-- STEP 5: NEXT WEEK -->
+    <div class="tab-content" id="rev-5">
+      <div class="card pink-card">
+        <div class="card-header"><div class="dot"></div><div class="label">Top 3 priorities next week</div></div>
+        <div class="pad">
+          <input class="text-in" type="text" id="p1" placeholder="Priority 1 (non-negotiable)">
+          <input class="text-in" type="text" id="p2" placeholder="Priority 2">
+          <input class="text-in" type="text" id="p3" placeholder="Priority 3">
+        </div>
+      </div>
+      <div class="card pink-card">
+        <div class="card-header"><div class="dot"></div><div class="label">Focus area</div></div>
+        <div class="focus-wrap">
+          <button class="focus-tag" id="ft-music" onclick="toggleF('music')">Music</button>
+          <button class="focus-tag" id="ft-event" onclick="toggleF('event')">Jul 23</button>
+          <button class="focus-tag" id="ft-content" onclick="toggleF('content')">Content</button>
+          <button class="focus-tag" id="ft-cbd" onclick="toggleF('cbd')">ThinkLeafy</button>
+          <button class="focus-tag" id="ft-merch" onclick="toggleF('merch')">Merch</button>
+          <button class="focus-tag" id="ft-network" onclick="toggleF('network')">Networking</button>
+          <button class="focus-tag" id="ft-piano" onclick="toggleF('piano')">Piano</button>
+        </div>
+      </div>
+      <div class="card pink-card">
+        <div class="card-header"><div class="dot"></div><div class="label">Content planned for next week</div></div>
+        <div class="pad"><textarea class="textarea" id="r-nextcon" rows="3" placeholder="3 posts — what are they? Shoot booked?"></textarea></div>
+      </div>
+      <div class="card pink-card">
+        <div class="card-header"><div class="dot"></div><div class="label">Networking events booked</div></div>
+        <div class="pad"><textarea class="textarea" id="r-nextevt" rows="2" placeholder="Which events are you attending?"></textarea></div>
+      </div>
+      <div style="display:flex;gap:10px;padding:0 16px 14px">
+        <button class="big-btn btn-outline" style="margin:0" onclick="goRevStep(4)">← Back</button>
+        <button class="big-btn btn-pink" style="margin:0" onclick="saveReview()">Save & summary →</button>
+      </div>
+    </div>
+
+    <!-- STEP 6: SUMMARY -->
+    <div class="tab-content" id="rev-6">
+      <div class="sum-grid">
+        <div class="sum-card"><div class="val" id="s-sp">—</div><div class="lbl">Spotify listeners</div></div>
+        <div class="sum-card"><div class="val" id="s-ig">—</div><div class="lbl">Insta followers</div></div>
+        <div class="sum-card"><div class="val" id="s-in">£0</div><div class="lbl">Revenue in</div></div>
+        <div class="sum-card"><div class="val" id="s-net">£0</div><div class="lbl">Net this week</div></div>
+      </div>
+      <div class="card pink-card">
+        <div class="card-header"><div class="dot"></div><div class="label">Content</div></div>
+        <div id="s-content" style="padding:10px 16px"></div>
+      </div>
+      <div class="card pink-card">
+        <div class="card-header"><div class="dot"></div><div class="label">Next week priorities</div></div>
+        <div id="s-prio" style="padding:12px 16px;font-size:13px;color:var(--text);line-height:2"></div>
+      </div>
+      <div class="card pink-card">
+        <div class="card-header"><div class="dot"></div><div class="label">Mindset</div></div>
+        <div id="s-mindset" style="padding:12px 16px;font-size:13px;color:var(--muted)"></div>
+      </div>
+      <button class="big-btn btn-pink" onclick="goRevStep(0)">Start new week</button>
+      <div style="height:20px"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <button class="nav-btn active" id="nav-roadmap" onclick="switchPage('roadmap')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+    Roadmap
+  </button>
+  <button class="nav-btn" id="nav-review" onclick="switchPage('review')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+    Review
+  </button>
+</div>
+</div>
+
+<script>
+// PAGE SWITCHING
+function switchPage(p) {
+  document.getElementById('page-roadmap').classList.toggle('active', p==='roadmap');
+  document.getElementById('page-review').classList.toggle('active', p==='review');
+  document.getElementById('nav-roadmap').classList.toggle('active', p==='roadmap');
+  document.getElementById('nav-review').classList.toggle('active', p==='review');
+}
+
+// TAB SWITCHING
+function switchTab(page, tab, el) {
+  const tabs = document.getElementById(page+'-tabs').querySelectorAll('.tab');
+  tabs.forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('#page-'+page+' .tab-content').forEach(tc => tc.classList.remove('active'));
+  document.getElementById(page+'-'+tab).classList.add('active');
+}
+
+// REVIEW STEPS
+const STEP_LABELS = ['Numbers','Content','Events','Money','Mindset','Next week','Summary'];
+let curStep = 0;
+function goRevStep(n) {
+  document.getElementById('rev-'+curStep).classList.remove('active');
+  document.getElementById('rev-'+n).classList.add('active');
+  for(let i=0;i<7;i++){
+    const d = document.getElementById('sd'+i);
+    d.classList.remove('active','done');
+    if(i===n) d.classList.add('active');
+    else if(i<n) d.classList.add('done');
+  }
+  document.getElementById('step-lbl').textContent = STEP_LABELS[n];
+  document.getElementById('review-scroll').scrollTop = 0;
+  curStep = n;
+}
+
+// MOOD
+let mood = 0;
+function setMood(v) {
+  mood = v;
+  [1,2,3,4].forEach(i => document.getElementById('mood-'+i).classList.toggle('sel', i===v));
+}
+
+// FOCUS TAGS
+const focusSel = {};
+function toggleF(k) {
+  focusSel[k] = !focusSel[k];
+  document.getElementById('ft-'+k).classList.toggle('sel', focusSel[k]);
+}
+
+// FINANCE
+function gv(id) { return parseFloat(document.getElementById(id).value)||0; }
+function calcNet() {
+  const inc = gv('f-merch')+gv('f-cbd')+gv('f-gig')+gv('f-str');
+  const out = gv('f-vid')+gv('f-out')+gv('f-pno')+gv('f-ads')+gv('f-evt')+gv('f-stk');
+  const net = inc-out;
+  document.getElementById('f-in').textContent = '£'+Math.round(inc).toLocaleString();
+  document.getElementById('f-out-total').textContent = '£'+Math.round(out).toLocaleString();
+  const netEl = document.getElementById('f-net');
+  netEl.textContent = (net>=0?'£':'−£')+Math.round(Math.abs(net)).toLocaleString();
+  netEl.style.color = net>=0 ? '#2ecc71' : '#e74c3c';
+}
+
+// SAVE REVIEW
+function saveReview() {
+  const sp = document.getElementById('r-sp').value;
+  const ig = document.getElementById('r-ig').value;
+  document.getElementById('s-sp').textContent = sp ? parseInt(sp).toLocaleString() : '—';
+  document.getElementById('s-ig').textContent = ig ? parseInt(ig).toLocaleString() : '—';
+  const inc = gv('f-merch')+gv('f-cbd')+gv('f-gig')+gv('f-str');
+  const out = gv('f-vid')+gv('f-out')+gv('f-pno')+gv('f-ads')+gv('f-evt')+gv('f-stk');
+  const net = inc-out;
+  document.getElementById('s-in').textContent = '£'+Math.round(inc).toLocaleString();
+  const sn = document.getElementById('s-net');
+  sn.textContent = (net>=0?'£':'−£')+Math.round(Math.abs(net)).toLocaleString();
+  sn.style.color = net>=0 ? '#2ecc71' : '#e74c3c';
+  const cLabels = ['Insta video','Insta photo','Piano/personality','Snap networking','Snap gym','Snap ThinkLeafy','Insta→Snap'];
+  let chtml = '';
+  ['rc1','rc2','rc3','rc4','rc5','rc6','rc7'].forEach((id,i) => {
+    const done = document.getElementById(id).checked;
+    chtml += `<div class="check-item"><span class="icon" style="color:${done?'#2ecc71':'#e74c3c'}">${done?'✓':'✗'}</span><span style="font-size:13px;color:var(--text)">${cLabels[i]}</span></div>`;
+  });
+  document.getElementById('s-content').innerHTML = chtml;
+  const p1=document.getElementById('p1').value, p2=document.getElementById('p2').value, p3=document.getElementById('p3').value;
+  let phtml = '';
+  if(p1) phtml += `<div>1. ${p1}</div>`;
+  if(p2) phtml += `<div>2. ${p2}</div>`;
+  if(p3) phtml += `<div>3. ${p3}</div>`;
+  document.getElementById('s-prio').innerHTML = phtml || '<span style="color:var(--dim)">None set</span>';
+  const moods = ['','Low energy','Okay week','Solid week','Locked in'];
+  document.getElementById('s-mindset').textContent = (mood ? moods[mood] : 'Not recorded');
+  goRevStep(6);
+}
+
+// METRICS
+function updateMetrics() {
+  const sp=parseInt(document.getElementById('u-sp').value)||0;
+  const ig=parseInt(document.getElementById('u-ig').value)||2851;
+  const tk=parseInt(document.getElementById('u-tk').value)||0;
+  const rv=parseInt(document.getElementById('u-rv').value)||0;
+  document.getElementById('m-sp').textContent=sp.toLocaleString();
+  document.getElementById('m-ig').textContent=ig.toLocaleString();
+  document.getElementById('m-tk').textContent=tk;
+  document.getElementById('m-rv').textContent='£'+rv.toLocaleString();
+  const pct=(v,t)=>Math.min(100,Math.round(v/t*100));
+  const setP=(s,v)=>{document.getElementById('p-'+s).style.width=v+'%';document.getElementById('p-'+s+'-lbl').textContent=v+'%'};
+  setP('sp',pct(sp,5000)); setP('ig',pct(ig,10000)); setP('tk',pct(tk,200)); setP('rv',pct(rv,3500));
+}
+
+// CHECKLIST
+const TASKS = [
+  'Complete APLH personal licence exam',
+  'Submit premises licence application',
+  'Book venue (233 cap)',
+  'Confirm alcohol supplier / sponsor',
+  'Find white-label CBD drink supplier',
+  'Recruit 2x security, 3x bar staff',
+  'Partner with uni student ambassador',
+  'Create event flyer + QR ticket sign-up',
+  'Set up email capture at ticket sign-up',
+  'Print & distribute flyers on campus + streets',
+  'Book promo girls for queue tactic',
+  'Source venue photo installation',
+  'Book videographer for monthly shoot',
+  'Choose & order shoot outfits (4 looks)',
+  'Book 4 networking events for July',
+  'Start piano lessons',
+  'Publish Wix event website',
+  'Plan ThinkLeafy retail spots',
+];
+let tasks = TASKS.map(t=>({text:t,done:false}));
+function renderChecklist() {
+  const c = document.getElementById('ck-items');
+  c.innerHTML = '';
+  tasks.forEach((t,i)=>{
+    const div = document.createElement('div');
+    div.className = 'task-row';
+    div.innerHTML = `<input type="checkbox" id="ck${i}" ${t.done?'checked':''}><label for="ck${i}" class="${t.done?'done':''}">${t.text}</label>`;
+    div.querySelector('input').addEventListener('change',e=>{tasks[i].done=e.target.checked;renderChecklist();});
+    c.appendChild(div);
+  });
+  const pct = Math.round(tasks.filter(t=>t.done).length/tasks.length*100);
+  document.getElementById('ck-pct-badge').textContent = pct+'%';
+}
+function addTask() {
+  const inp = document.getElementById('new-task-in');
+  if(!inp.value.trim()) return;
+  tasks.push({text:inp.value.trim(),done:false});
+  inp.value='';
+  renderChecklist();
+}
+renderChecklist();
+
+// WEEK SELECTOR
+const wkSel = document.getElementById('wk-sel');
+const now = new Date();
+for(let i=0;i<12;i++){
+  const d = new Date(now);
+  d.setDate(d.getDate()-(i*7));
+  const start = new Date(d);
+  start.setDate(d.getDate()-d.getDay()+1);
+  const end = new Date(start);
+  end.setDate(start.getDate()+6);
+  const fmt = dt => dt.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+  const opt = document.createElement('option');
+  opt.value = i;
+  opt.textContent = fmt(start)+' – '+fmt(end);
+  wkSel.appendChild(opt);
+}
+function setWeekLabel() {
+  document.getElementById('wk-lbl').textContent = 'Week of '+wkSel.options[wkSel.selectedIndex].textContent;
+}
+setWeekLabel();
+</script>
+</body>
+</html>
