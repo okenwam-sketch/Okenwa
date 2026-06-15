@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ledger — Vision vs Reality</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #0c0c0e;
+    --panel:     #141417;
+    --panel-2:   #1a1a1f;
+    --line:      #26262c;
+    --line-soft: #1f1f24;
+    --ink:       #f2efe9;
+    --ink-dim:   #9a988f;
+    --ink-faint: #5e5c56;
+    --gold:      #c8a96a;
+    --gold-dim:  #8a7445;
+    --green:     #5fb98a;
+    --red:       #d97a52;
+    --blue:      #7da4d4;
+    --display: 'Fraunces', Georgia, serif;
+    --body: 'Inter', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--body);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    padding: 0 0 6rem;
+  }
+  .shell { max-width: 1120px; margin: 0 auto; padding: 0 28px; }
+
+  /* ---------- Masthead ---------- */
+  header.mast {
+    border-bottom: 1px solid var(--line);
+    padding: 38px 0 26px;
+    margin-bottom: 30px;
+  }
+  .mast-row { display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 18px; }
+  .mast h1 {
+    font-family: var(--display);
+    font-weight: 500;
+    font-size: clamp(2.1rem, 5vw, 3.1rem);
+    letter-spacing: -0.02em;
+    line-height: 0.98;
+  }
+  .mast h1 .dot { color: var(--gold); }
+  .mast .sub {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.28em;
+    color: var(--ink-faint);
+    margin-top: 12px;
+  }
+  .mast .window {
+    text-align: right;
+    font-family: var(--mono);
+    font-size: 0.74rem;
+    color: var(--ink-dim);
+    letter-spacing: 0.04em;
+  }
+  .mast .window b { color: var(--gold); font-weight: 500; }
+
+  /* ---------- Nav ---------- */
+  nav.tabs { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 32px; }
+  nav.tabs button {
+    font-family: var(--body);
+    font-size: 0.82rem;
+    letter-spacing: 0.02em;
+    color: var(--ink-dim);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    padding: 8px 18px;
+    cursor: pointer;
+    transition: color .18s, background .18s, border-color .18s;
+  }
+  nav.tabs button:hover { color: var(--ink); }
+  nav.tabs button.on {
+    color: var(--bg);
+    background: var(--gold);
+    font-weight: 500;
+  }
+
+  .panel { display: none; }
+  .panel.show { display: block; animation: fade .35s ease; }
+  @keyframes fade { from { opacity: 0; transform: translateY(6px);} to { opacity:1; transform:none; } }
+
+  /* ---------- Stat band ---------- */
+  .band { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; margin-bottom: 30px; }
+  .band .cell { background: var(--panel); padding: 20px 22px; }
+  .band .k { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.2em; color: var(--ink-faint); margin-bottom: 10px; }
+  .band .v { font-family: var(--mono); font-size: 1.5rem; font-weight: 500; letter-spacing: -0.01em; }
+  .band .v.gold { color: var(--gold); }
+  .band .v.green { color: var(--green); }
+  .band .v.red { color: var(--red); }
+  .band .v.blue { color: var(--blue); }
+  .band .note { font-size: 0.72rem; color: var(--ink-dim); margin-top: 6px; }
+
+  /* ---------- Goal rails ---------- */
+  .rails { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 30px; }
+  @media (max-width: 720px){ .rails { grid-template-columns: 1fr; } }
+  .rail { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 22px 24px; }
+  .rail .top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+  .rail .label { font-family: var(--display); font-size: 1.15rem; font-weight: 500; }
+  .rail .pct { font-family: var(--mono); font-size: 0.8rem; color: var(--ink-dim); }
+  .rail .figs { font-family: var(--mono); font-size: 0.82rem; color: var(--ink-dim); margin-bottom: 14px; }
+  .rail .figs b { color: var(--ink); font-weight: 500; }
+  .track { height: 10px; background: var(--panel-2); border-radius: 999px; overflow: hidden; border: 1px solid var(--line-soft); }
+  .track > span { display: block; height: 100%; border-radius: 999px; transition: width .5s cubic-bezier(.2,.7,.2,1); }
+  .fill-gold { background: linear-gradient(90deg, var(--gold-dim), var(--gold)); }
+  .fill-green { background: linear-gradient(90deg, #3c7a5a, var(--green)); }
+
+  /* ---------- Section heads ---------- */
+  .sec-head { display: flex; align-items: baseline; gap: 14px; margin: 36px 0 16px; }
+  .sec-head .n { font-family: var(--mono); font-size: 0.74rem; color: var(--gold); letter-spacing: 0.1em; }
+  .sec-head h2 { font-family: var(--display); font-weight: 500; font-size: 1.35rem; letter-spacing: -0.01em; }
+  .sec-head .ln { flex: 1; height: 1px; background: var(--line); }
+
+  /* ---------- Ledger table ---------- */
+  .ledger { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+  .ledger thead th {
+    font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.16em;
+    color: var(--ink-faint); font-weight: 500; text-align: right;
+    padding: 0 12px 12px; border-bottom: 1px solid var(--line);
+  }
+  .ledger thead th:first-child { text-align: left; }
+  .ledger tbody td { padding: 11px 12px; border-bottom: 1px solid var(--line-soft); text-align: right; }
+  .ledger tbody td:first-child { text-align: left; color: var(--ink-dim); }
+  .ledger tbody tr:hover td { background: var(--panel); }
+  .ledger .cat-sub { display:block; font-size: 0.7rem; color: var(--ink-faint); margin-top: 1px; }
+  .num { font-family: var(--mono); letter-spacing: -0.01em; }
+  .ledger input {
+    font-family: var(--mono); font-size: 0.85rem; color: var(--ink);
+    background: var(--panel-2); border: 1px solid var(--line);
+    border-radius: 7px; padding: 6px 9px; width: 92px; text-align: right;
+    transition: border-color .15s;
+  }
+  .ledger input:focus { outline: none; border-color: var(--gold); }
+  .ledger .diff.under { color: var(--green); }
+  .ledger .diff.over  { color: var(--red); }
+  .ledger .diff.flat  { color: var(--ink-faint); }
+  .pace { width: 84px; }
+  .pace .pace-track { height: 6px; background: var(--panel-2); border-radius: 999px; overflow: hidden; border: 1px solid var(--line-soft); display: inline-block; width: 100%; vertical-align: middle; }
+  .pace .pace-track > span { display:block; height:100%; border-radius:999px; }
+  .ledger tfoot td { padding: 16px 12px 0; border-top: 1px solid var(--line); font-family: var(--mono); font-weight: 600; text-align: right; }
+  .ledger tfoot td:first-child { text-align: left; font-family: var(--body); color: var(--ink); }
+  .ledger tfoot .lo-green { color: var(--green); }
+  .ledger tfoot .lo-red { color: var(--red); }
+
+  .month-pick { display: flex; gap: 6px; margin-bottom: 22px; }
+  .month-pick button {
+    font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.05em;
+    background: var(--panel); color: var(--ink-dim); border: 1px solid var(--line);
+    border-radius: 9px; padding: 8px 16px; cursor: pointer; transition: all .15s;
+  }
+  .month-pick button.on { color: var(--gold); border-color: var(--gold-dim); background: var(--panel-2); }
+
+  /* ---------- Weekly log ---------- */
+  .logform { display: grid; grid-template-columns: 120px 1fr 110px 1fr auto; gap: 10px; align-items: end; margin-bottom: 24px; }
+  @media (max-width: 720px){ .logform { grid-template-columns: 1fr 1fr; } }
+  .field label { display:block; font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.16em; color: var(--ink-faint); margin-bottom: 6px; }
+  .field input, .field select {
+    width: 100%; font-family: var(--body); font-size: 0.85rem; color: var(--ink);
+    background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px;
+  }
+  .field input:focus, .field select:focus { outline: none; border-color: var(--gold); }
+  .btn {
+    font-family: var(--body); font-size: 0.82rem; font-weight: 500; letter-spacing: 0.02em;
+    cursor: pointer; border-radius: 9px; padding: 10px 20px; transition: all .15s; border: 1px solid var(--line);
+  }
+  .btn-gold { background: var(--gold); color: var(--bg); border-color: var(--gold); }
+  .btn-gold:hover { background: #d8ba7d; }
+  .btn-ghost { background: transparent; color: var(--ink-dim); }
+  .btn-ghost:hover { color: var(--ink); border-color: var(--ink-faint); }
+
+  .loglist { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  .loglist th { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.16em; color: var(--ink-faint); font-weight: 500; text-align: left; padding: 0 10px 10px; border-bottom: 1px solid var(--line); }
+  .loglist th:last-child, .loglist th.r { text-align: right; }
+  .loglist td { padding: 10px; border-bottom: 1px solid var(--line-soft); color: var(--ink-dim); }
+  .loglist td.r { text-align: right; font-family: var(--mono); color: var(--ink); }
+  .loglist .wk { font-family: var(--mono); color: var(--gold); font-size: 0.78rem; }
+  .loglist .del { color: var(--ink-faint); cursor: pointer; font-size: 0.8rem; }
+  .loglist .del:hover { color: var(--red); }
+  .empty { color: var(--ink-faint); font-size: 0.85rem; padding: 28px 0; text-align: center; }
+
+  .wk-summary { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); gap: 12px; margin: 8px 0 30px; }
+  .wk-card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .wk-card .wkn { font-family: var(--mono); font-size: 0.72rem; color: var(--gold); letter-spacing: 0.08em; }
+  .wk-card .wkv { font-family: var(--mono); font-size: 1.3rem; font-weight: 500; margin-top: 6px; }
+  .wk-card .wkd { font-size: 0.72rem; color: var(--ink-dim); margin-top: 4px; }
+
+  /* ---------- Verdict ---------- */
+  .verdict { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 26px 28px; margin-bottom: 30px; display:flex; gap: 22px; align-items: flex-start; }
+  .verdict .badge { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 7px 14px; border-radius: 999px; white-space: nowrap; }
+  .verdict .badge.ahead { background: rgba(95,185,138,.14); color: var(--green); border:1px solid rgba(95,185,138,.3); }
+  .verdict .badge.ontrack { background: rgba(200,169,106,.14); color: var(--gold); border:1px solid rgba(200,169,106,.3); }
+  .verdict .badge.over { background: rgba(217,122,82,.14); color: var(--red); border:1px solid rgba(217,122,82,.3); }
+  .verdict p { font-size: 0.92rem; color: var(--ink-dim); }
+  .verdict p b { color: var(--ink); font-weight: 500; }
+
+  .toolbar { display:flex; gap: 10px; flex-wrap: wrap; margin-top: 34px; padding-top: 24px; border-top: 1px solid var(--line); }
+  .hint { font-size: 0.78rem; color: var(--ink-faint); margin-top: 14px; line-height: 1.6; }
+
+  .saved-flash { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--gold); color: var(--bg); font-size: 0.82rem; font-weight: 500; padding: 11px 22px; border-radius: 999px; opacity: 0; pointer-events: none; transition: all .3s; }
+  .saved-flash.on { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <header class="mast">
+    <div class="mast-row">
+      <div>
+        <h1>Ledger<span class="dot">.</span></h1>
+        <div class="sub">Vision &times; Reality &middot; Summer Reset</div>
+      </div>
+      <div class="window">
+        Pay lands <b>25th</b> &middot; &pound;3,500/mo<br>
+        Jun &middot; Jul &middot; Aug 2026
+      </div>
+    </div>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button data-tab="overview" class="on">Overview</button>
+    <button data-tab="month">Monthly</button>
+    <button data-tab="weekly">Weekly log</button>
+    <button data-tab="saved">Avoided spend</button>
+  </nav>
+
+  <!-- ============ OVERVIEW ============ -->
+  <section class="panel show" id="panel-overview">
+    <div class="band" id="ov-band"></div>
+
+    <div class="rails">
+      <div class="rail">
+        <div class="top"><span class="label">Credit card kill</span><span class="pct" id="cc-pct">0%</span></div>
+        <div class="figs">cleared <b id="cc-actual">&pound;0</b> of <b>&pound;3,800</b></div>
+        <div class="track"><span class="fill-gold" id="cc-bar" style="width:0%"></span></div>
+      </div>
+      <div class="rail">
+        <div class="top"><span class="label">Invested</span><span class="pct" id="inv-pct">0%</span></div>
+        <div class="figs">put away <b id="inv-actual">&pound;0</b> of <b id="inv-goal">&pound;150</b> planned</div>
+        <div class="track"><span class="fill-green" id="inv-bar" style="width:0%"></span></div>
+      </div>
+    </div>
+
+    <div class="verdict" id="verdict"></div>
+
+    <div class="sec-head"><span class="n">01</span><h2>The three-month arc</h2><span class="ln"></span></div>
+    <table class="ledger" id="arc-table">
+      <thead><tr><th>Month</th><th>Income</th><th>Planned out</th><th>Actual out</th><th>To card</th><th>Result</th></tr></thead>
+      <tbody id="arc-body"></tbody>
+    </table>
+    <p class="hint">Every figure on the Monthly tab is editable — change a target or log a real spend and these totals, bars and the verdict all recompute. Your data is saved in this browser automatically, so it survives a refresh once the file is live on GitHub Pages.</p>
+  </section>
+
+  <!-- ============ MONTHLY ============ -->
+  <section class="panel" id="panel-month">
+    <div class="month-pick" id="month-pick"></div>
+    <div class="band" id="m-band"></div>
+    <div class="sec-head"><span class="n" id="m-num">02</span><h2 id="m-title">Month</h2><span class="ln"></span></div>
+    <table class="ledger" id="m-table">
+      <thead><tr><th>Category</th><th>Planned</th><th>Actual</th><th>Difference</th><th>Pace</th></tr></thead>
+      <tbody id="m-body"></tbody>
+      <tfoot id="m-foot"></tfoot>
+    </table>
+    <p class="hint">Planned = the vision we agreed. Actual = what really left your account. Green difference means you came in under and freed cash; red means you went over. The pace bar fills as actual approaches the plan for that line.</p>
+  </section>
+
+  <!-- ============ WEEKLY ============ -->
+  <section class="panel" id="panel-weekly">
+    <div class="sec-head"><span class="n">03</span><h2>Log a spend</h2><span class="ln"></span></div>
+    <div class="logform">
+      <div class="field"><label>Month</label><select id="lg-month"></select></div>
+      <div class="field"><label>Category</label><select id="lg-cat"></select></div>
+      <div class="field"><label>Amount &pound;</label><input type="number" id="lg-amt" placeholder="0" min="0" step="0.01"></div>
+      <div class="field"><label>Note (optional)</label><input type="text" id="lg-note" placeholder="e.g. train to London"></div>
+      <button class="btn btn-gold" id="lg-add">Add entry</button>
+    </div>
+
+    <div class="sec-head"><span class="n">&nbsp;</span><h2 id="wk-head">By week</h2><span class="ln"></span></div>
+    <div class="wk-summary" id="wk-summary"></div>
+
+    <table class="loglist" id="log-table">
+      <thead><tr><th>Week</th><th>Month</th><th>Category</th><th>Note</th><th class="r">Amount</th><th></th></tr></thead>
+      <tbody id="log-body"></tbody>
+    </table>
+    <p class="hint">Each entry is auto-stamped with the week it was added (Week 1 = first 7 days of logging, and so on) and folded into that month's actual spend. Logging as you go is what makes the vision-vs-reality picture honest.</p>
+  </section>
+
+  <!-- ============ AVOIDED ============ -->
+  <section class="panel" id="panel-saved">
+    <div class="band" id="sv-band"></div>
+    <div class="sec-head"><span class="n">04</span><h2>Money you didn't spend</h2><span class="ln"></span></div>
+    <table class="ledger" id="sv-table">
+      <thead><tr><th>Category</th><th>Planned</th><th>Actual</th><th>Avoided</th></tr></thead>
+      <tbody id="sv-body"></tbody>
+      <tfoot id="sv-foot"></tfoot>
+    </table>
+    <p class="hint">This only counts discretionary lines — eating out, snacks, perfume, dry clean, haircut, transport. Skipping a night out or packing lunch shows up here as real money reclaimed. Coming in under on rent or your card payment isn't &ldquo;saving,&rdquo; so those are left out.</p>
+  </section>
+
+  <div class="toolbar">
+    <button class="btn btn-gold" id="export-csv">Export CSV</button>
+    <button class="btn btn-ghost" id="reset-actuals">Reset actuals</button>
+    <button class="btn btn-ghost" id="reset-all">Reset everything</button>
+  </div>
+  <p class="hint">CSV opens straight in Excel or Power BI — pull it in whenever you want to chart the trend.</p>
+
+</div>
+
+<div class="saved-flash" id="flash">Saved</div>
+
+<script>
+"use strict";
+
+/* ---------------- Default plan (editable) ---------------- */
+/* type: 'debt' | 'invest' | 'fixed' | 'flex' (flex = discretionary, counts toward avoided spend) */
+const DEFAULT = {
+  ccGoal: 3800,
+  months: [
+    { name: "June", income: 3500, cats: [
+      { id:"jun-cc",  name:"Credit card",        sub:"balance £3,800 → £1,800", type:"debt",   plan:2000 },
+      { id:"jun-uni", name:"Uni loan (STA)",     type:"fixed",  plan:200 },
+      { id:"jun-lin", name:"Linda",              type:"fixed",  plan:400 },
+      { id:"jun-hse", name:"House contribution", type:"fixed",  plan:150 },
+      { id:"jun-sub", name:"Subscriptions",      sub:"phone, music, iCloud, Anthropic", type:"fixed", plan:64 },
+      { id:"jun-bnpl",name:"Klarna + Clearpay",  type:"fixed",  plan:260 },
+      { id:"jun-trn", name:"Transportation",     type:"flex",   plan:300 },
+      { id:"jun-cut", name:"Haircut",            type:"flex",   plan:40 },
+      { id:"jun-prf", name:"Perfume",            type:"flex",   plan:40 },
+      { id:"jun-inv", name:"Investment",         type:"invest", plan:0 }
+    ]},
+    { name: "July", income: 3500, cats: [
+      { id:"jul-cc",  name:"Credit card",        sub:"balance £1,800 → £215", type:"debt",   plan:1585 },
+      { id:"jul-uni", name:"Uni loan (STA)",     type:"fixed",  plan:200 },
+      { id:"jul-lin", name:"Linda",              type:"fixed",  plan:400 },
+      { id:"jul-hse", name:"House contribution", type:"fixed",  plan:150 },
+      { id:"jul-mov", name:"Moving costs",       sub:"van, Enterprise dep, petrol, hold", type:"fixed", plan:620 },
+      { id:"jul-sub", name:"Subscriptions",      type:"fixed",  plan:64 },
+      { id:"jul-bnpl",name:"Klarna + Clearpay",  type:"fixed",  plan:141 },
+      { id:"jul-trn", name:"Transportation",     type:"flex",   plan:300 },
+      { id:"jul-cut", name:"Haircut",            type:"flex",   plan:40 },
+      { id:"jul-inv", name:"Investment",         type:"invest", plan:0 }
+    ]},
+    { name: "August", income: 3500, cats: [
+      { id:"aug-dep", name:"Deposit",            type:"fixed",  plan:1100 },
+      { id:"aug-rnt", name:"Rent",               type:"fixed",  plan:1100 },
+      { id:"aug-cc",  name:"Credit card",        sub:"balance £215 → £0 cleared", type:"debt",   plan:215 },
+      { id:"aug-uni", name:"Uni loan (STA)",     type:"fixed",  plan:200 },
+      { id:"aug-lin", name:"Linda",              type:"fixed",  plan:400 },
+      { id:"aug-sub", name:"Subscriptions",      type:"fixed",  plan:64 },
+      { id:"aug-trn", name:"Transportation",     type:"flex",   plan:70 },
+      { id:"aug-fd",  name:"Food",               type:"flex",   plan:120 },
+      { id:"aug-cut", name:"Haircut",            type:"flex",   plan:40 },
+      { id:"aug-out", name:"Going out",          type:"flex",   plan:60 },
+      { id:"aug-snk", name:"Snacks / wants",     type:"flex",   plan:40 },
+      { id:"aug-inv", name:"Investment",         type:"invest", plan:100 }
+    ]}
+  ],
+  log: [],          // {id, month, catId, amount, note, ts, week}
+  logStartTs: null  // first time a spend was logged, anchors week numbering
+};
+
+/* ---------------- State / persistence ---------------- */
+const KEY = "svd-ledger-v1";
+let state = load();
+
+function load(){
+  try {
+    const raw = localStorage.getItem(KEY);
+    if(!raw) return structuredClone(DEFAULT);
+    const s = JSON.parse(raw);
+    // shallow guard: if shape looks wrong, fall back
+    if(!s.months || !Array.isArray(s.months)) return structuredClone(DEFAULT);
+    if(s.log === undefined) s.log = [];
+    if(s.logStartTs === undefined) s.logStartTs = null;
+    // ensure actual field exists on each cat
+    s.months.forEach(m => m.cats.forEach(c => { if(c.actual === undefined) c.actual = 0; }));
+    return s;
+  } catch(e){ return structuredClone(DEFAULT); }
+}
+function save(){
+  try { localStorage.setItem(KEY, JSON.stringify(state)); flash(); }
+  catch(e){ /* storage unavailable — app still works for the session */ }
+}
+let flashT;
+function flash(){
+  const f = document.getElementById("flash");
+  f.classList.add("on");
+  clearTimeout(flashT);
+  flashT = setTimeout(()=> f.classList.remove("on"), 1100);
+}
+
+/* ensure each cat has actual */
+state.months.forEach(m => m.cats.forEach(c => { if(c.actual === undefined) c.actual = 0; }));
+
+/* ---------------- Helpers ---------------- */
+const gbp = n => "£" + Math.round(n).toLocaleString("en-GB");
+const gbp1 = n => "£" + (Math.round(n*100)/100).toLocaleString("en-GB", {minimumFractionDigits:0});
+const sum = (arr, f) => arr.reduce((a,x)=>a+f(x),0);
+
+function monthActual(m){ return sum(m.cats, c => Number(c.actual)||0); }
+function monthPlan(m){ return sum(m.cats, c => Number(c.plan)||0); }
+function catActual(m){ // log entries override manual actual when present for that cat
+  // We treat c.actual as the source of truth; logging adds into it.
+  return null;
+}
+
+/* ---------------- OVERVIEW ---------------- */
+function renderOverview(){
+  const income = sum(state.months, m=>Number(m.income)||0);
+  const plannedOut = sum(state.months, monthPlan);
+  const actualOut = sum(state.months, monthActual);
+
+  const ccActual = sum(state.months, m => sum(m.cats.filter(c=>c.type==="debt"), c=>Number(c.actual)||0));
+  const ccPlan   = sum(state.months, m => sum(m.cats.filter(c=>c.type==="debt"), c=>Number(c.plan)||0));
+  const invActual= sum(state.months, m => sum(m.cats.filter(c=>c.type==="invest"), c=>Number(c.actual)||0));
+  const invPlan  = sum(state.months, m => sum(m.cats.filter(c=>c.type==="invest"), c=>Number(c.plan)||0));
+
+  // band
+  const leftoverPlan = income - plannedOut;
+  const leftoverActual = income - actualOut;
+  document.getElementById("ov-band").innerHTML = `
+    <div class="cell"><div class="k">Income · 3 mo</div><div class="v green">${gbp(income)}</div><div class="note">£3,500 × 3</div></div>
+    <div class="cell"><div class="k">Planned out</div><div class="v">${gbp(plannedOut)}</div><div class="note">the vision</div></div>
+    <div class="cell"><div class="k">Actual out</div><div class="v ${actualOut>plannedOut?'red':'gold'}">${gbp(actualOut)}</div><div class="note">logged so far</div></div>
+    <div class="cell"><div class="k">Headroom left</div><div class="v ${leftoverActual<0?'red':'blue'}">${gbp(leftoverActual)}</div><div class="note">income − actual</div></div>`;
+
+  // rails
+  const ccPct = Math.min(100, state.ccGoal? ccActual/state.ccGoal*100 : 0);
+  document.getElementById("cc-pct").textContent = Math.round(ccPct)+"%";
+  document.getElementById("cc-actual").textContent = gbp(ccActual);
+  document.getElementById("cc-bar").style.width = ccPct+"%";
+
+  const invPct = invPlan? Math.min(100, invActual/invPlan*100) : (invActual>0?100:0);
+  document.getElementById("inv-pct").textContent = Math.round(invPct)+"%";
+  document.getElementById("inv-actual").textContent = gbp(invActual);
+  document.getElementById("inv-goal").textContent = gbp(invPlan);
+  document.getElementById("inv-bar").style.width = invPct+"%";
+
+  // verdict
+  let cls, head, body;
+  if(actualOut === 0){
+    cls="ontrack"; head="Awaiting data";
+    body = `Nothing logged yet. Head to <b>Monthly</b> to enter real spend, or use the <b>Weekly log</b> as money goes out. The moment you do, this reads back whether you're holding the line.`;
+  } else if(actualOut <= plannedOut){
+    const saved = plannedOut - actualOut;
+    cls="ahead"; head="Ahead of plan";
+    body = `You're <b>${gbp(saved)}</b> under your own targets across the months logged. Card cleared so far: <b>${gbp(ccActual)}</b> of £3,800. Keep that discipline and the September runway opens up fast.`;
+  } else {
+    const over = actualOut - plannedOut;
+    cls="over"; head="Over plan";
+    body = `You're <b>${gbp(over)}</b> past target. Not fatal — find it on the <b>Monthly</b> tab (red lines are the leak) and trim a flex category next week to claw it back.`;
+  }
+  document.getElementById("verdict").innerHTML =
+    `<span class="badge ${cls}">${head}</span><p>${body}</p>`;
+
+  // arc table
+  document.getElementById("arc-body").innerHTML = state.months.map(m=>{
+    const mp = monthPlan(m), ma = monthActual(m);
+    const cc = sum(m.cats.filter(c=>c.type==="debt"), c=>Number(c.actual)||0)
+            || sum(m.cats.filter(c=>c.type==="debt"), c=>Number(c.plan)||0);
+    const lo = m.income - (ma>0?ma:mp);
+    const loCls = lo<0?'red':'green';
+    const usingActual = ma>0;
+    return `<tr>
+      <td>${m.name}</td>
+      <td class="num">${gbp(m.income)}</td>
+      <td class="num">${gbp(mp)}</td>
+      <td class="num">${usingActual?gbp(ma):'<span style="color:var(--ink-faint)">—</span>'}</td>
+      <td class="num">${gbp(cc)}</td>
+      <td class="num diff ${lo<0?'over':'under'}">${gbp(lo)}</td>
+    </tr>`;
+  }).join("");
+}
+
+/* ---------------- MONTHLY ---------------- */
+let activeMonth = 0;
+function renderMonthPicker(){
+  document.getElementById("month-pick").innerHTML = state.months.map((m,i)=>
+    `<button data-m="${i}" class="${i===activeMonth?'on':''}">${m.name}</button>`).join("");
+  document.querySelectorAll("#month-pick button").forEach(b=>{
+    b.onclick = ()=>{ activeMonth = +b.dataset.m; renderMonth(); };
+  });
+}
+function renderMonth(){
+  renderMonthPicker();
+  const m = state.months[activeMonth];
+  const mp = monthPlan(m), ma = monthActual(m);
+  document.getElementById("m-num").textContent = "0"+(activeMonth+1);
+  document.getElementById("m-title").textContent = m.name + " — pay 25th";
+
+  const loP = m.income - mp, loA = m.income - ma;
+  document.getElementById("m-band").innerHTML = `
+    <div class="cell"><div class="k">Income</div><div class="v green">${gbp(m.income)}</div></div>
+    <div class="cell"><div class="k">Planned out</div><div class="v">${gbp(mp)}</div></div>
+    <div class="cell"><div class="k">Actual out</div><div class="v ${ma>mp?'red':'gold'}">${gbp(ma)}</div></div>
+    <div class="cell"><div class="k">Left (actual)</div><div class="v ${loA<0?'red':'blue'}">${gbp(loA)}</div><div class="note">plan: ${gbp(loP)}</div></div>`;
+
+  document.getElementById("m-body").innerHTML = m.cats.map(c=>{
+    const plan = Number(c.plan)||0, act = Number(c.actual)||0;
+    const diff = plan - act;
+    let dcls = "flat", dtxt = "—";
+    if(act>0 || plan>0){
+      if(diff>0){ dcls="under"; dtxt = "+"+gbp(diff); }
+      else if(diff<0){ dcls="over"; dtxt = "−"+gbp(Math.abs(diff)); }
+      else { dcls="flat"; dtxt="±£0"; }
+    }
+    const pace = plan>0 ? Math.min(100, act/plan*100) : (act>0?100:0);
+    const paceCol = act>plan ? "var(--red)" : "var(--gold)";
+    return `<tr>
+      <td>${c.name}${c.sub?`<span class="cat-sub">${c.sub}</span>`:""}</td>
+      <td><input type="number" min="0" step="1" value="${plan}" data-edit="plan" data-id="${c.id}"></td>
+      <td><input type="number" min="0" step="1" value="${act}" data-edit="actual" data-id="${c.id}"></td>
+      <td class="num diff ${dcls}">${dtxt}</td>
+      <td class="pace"><span class="pace-track"><span style="width:${pace}%;background:${paceCol}"></span></span></td>
+    </tr>`;
+  }).join("");
+
+  const foot = document.getElementById("m-foot");
+  foot.innerHTML = `
+    <tr><td>Total out</td><td class="num">${gbp(mp)}</td><td class="num">${gbp(ma)}</td><td class="num diff ${ma>mp?'over':'under'}">${ma>mp?'−'+gbp(ma-mp):'+'+gbp(mp-ma)}</td><td></td></tr>
+    <tr><td>Left over</td><td class="num ${loP<0?'lo-red':'lo-green'}">${gbp(loP)}</td><td class="num ${loA<0?'lo-red':'lo-green'}">${gbp(loA)}</td><td></td><td></td></tr>`;
+
+  document.querySelectorAll("#m-body input").forEach(inp=>{
+    inp.addEventListener("change", ()=>{
+      const cat = m.cats.find(c=>c.id===inp.dataset.id);
+      if(!cat) return;
+      const val = Math.max(0, Number(inp.value)||0);
+      cat[inp.dataset.edit] = val;
+      save();
+      renderMonth(); renderOverview(); renderSaved();
+    });
+  });
+}
+
+/* ---------------- WEEKLY LOG ---------------- */
+function weekOf(ts){
+  if(!state.logStartTs) return 1;
+  const diff = ts - state.logStartTs;
+  return Math.floor(diff / (7*24*3600*1000)) + 1;
+}
+function renderLogControls(){
+  const ms = document.getElementById("lg-month");
+  ms.innerHTML = state.months.map((m,i)=>`<option value="${i}">${m.name}</option>`).join("");
+  const fillCats = ()=>{
+    const mi = +ms.value;
+    document.getElementById("lg-cat").innerHTML =
+      state.months[mi].cats.map(c=>`<option value="${c.id}">${c.name}</option>`).join("");
+  };
+  ms.onchange = fillCats;
+  fillCats();
+}
+function renderLog(){
+  const body = document.getElementById("log-body");
+  if(!state.log.length){
+    body.innerHTML = `<tr><td colspan="6" class="empty">No entries yet. Log your first real spend above.</td></tr>`;
+  } else {
+    const rows = [...state.log].sort((a,b)=>b.ts-a.ts).map(e=>{
+      const m = state.months[e.month];
+      const cat = m?.cats.find(c=>c.id===e.catId);
+      return `<tr>
+        <td class="wk">W${e.week}</td>
+        <td>${m?m.name:"—"}</td>
+        <td>${cat?cat.name:"—"}</td>
+        <td>${e.note?e.note:'<span style="color:var(--ink-faint)">—</span>'}</td>
+        <td class="r">${gbp1(e.amount)}</td>
+        <td class="r"><span class="del" data-del="${e.id}">remove</span></td>
+      </tr>`;
+    }).join("");
+    body.innerHTML = rows;
+    body.querySelectorAll(".del").forEach(d=>{
+      d.onclick = ()=> removeEntry(d.dataset.del);
+    });
+  }
+
+  // weekly summary cards
+  const byWeek = {};
+  state.log.forEach(e=>{ byWeek[e.week] = (byWeek[e.week]||0) + Number(e.amount); });
+  const weeks = Object.keys(byWeek).map(Number).sort((a,b)=>a-b);
+  const wkWrap = document.getElementById("wk-summary");
+  if(!weeks.length){
+    wkWrap.innerHTML = `<div class="wk-card"><div class="wkn">WEEK 1</div><div class="wkv">£0</div><div class="wkd">nothing logged</div></div>`;
+  } else {
+    wkWrap.innerHTML = weeks.map(w=>{
+      const count = state.log.filter(e=>e.week===w).length;
+      return `<div class="wk-card"><div class="wkn">WEEK ${w}</div><div class="wkv">${gbp(byWeek[w])}</div><div class="wkd">${count} ${count===1?'entry':'entries'}</div></div>`;
+    }).join("");
+  }
+}
+function addEntry(){
+  const mi = +document.getElementById("lg-month").value;
+  const catId = document.getElementById("lg-cat").value;
+  const amt = Number(document.getElementById("lg-amt").value);
+  const note = document.getElementById("lg-note").value.trim();
+  if(!amt || amt<=0){ document.getElementById("lg-amt").focus(); return; }
+  const ts = Date.now();
+  if(!state.logStartTs) state.logStartTs = ts;
+  const entry = { id: "e"+ts+Math.random().toString(36).slice(2,6), month: mi, catId, amount: amt, note, ts, week: weekOf(ts) };
+  state.log.push(entry);
+  // fold into that category's actual
+  const cat = state.months[mi].cats.find(c=>c.id===catId);
+  if(cat) cat.actual = (Number(cat.actual)||0) + amt;
+  document.getElementById("lg-amt").value = "";
+  document.getElementById("lg-note").value = "";
+  save();
+  renderLog(); renderMonth(); renderOverview(); renderSaved();
+}
+function removeEntry(id){
+  const idx = state.log.findIndex(e=>e.id===id);
+  if(idx<0) return;
+  const e = state.log[idx];
+  const cat = state.months[e.month]?.cats.find(c=>c.id===e.catId);
+  if(cat) cat.actual = Math.max(0, (Number(cat.actual)||0) - Number(e.amount));
+  state.log.splice(idx,1);
+  save();
+  renderLog(); renderMonth(); renderOverview(); renderSaved();
+}
+
+/* ---------------- AVOIDED SPEND ---------------- */
+function renderSaved(){
+  const flexRows = [];
+  let totPlan=0, totAct=0;
+  state.months.forEach(m=>{
+    m.cats.filter(c=>c.type==="flex").forEach(c=>{
+      const plan=Number(c.plan)||0, act=Number(c.actual)||0;
+      if(plan===0 && act===0) return;
+      const avoided = Math.max(0, plan-act);
+      totPlan+=plan; totAct+=act;
+      flexRows.push({label:`${m.name} · ${c.name}`, plan, act, avoided});
+    });
+  });
+  const totAvoided = Math.max(0, totPlan-totAct);
+  // only count actuals that exist
+  const anyActual = state.months.some(m=>m.cats.some(c=>c.type==="flex" && (Number(c.actual)||0)>0));
+
+  document.getElementById("sv-band").innerHTML = `
+    <div class="cell"><div class="k">Flex budget</div><div class="v">${gbp(totPlan)}</div><div class="note">planned discretionary</div></div>
+    <div class="cell"><div class="k">Flex spent</div><div class="v gold">${gbp(totAct)}</div></div>
+    <div class="cell"><div class="k">Avoided</div><div class="v green">${anyActual?gbp(totAvoided):'£0'}</div><div class="note">reclaimed by skipping</div></div>
+    <div class="cell"><div class="k">→ Toward goals</div><div class="v blue">${anyActual?gbp(totAvoided):'£0'}</div><div class="note">extra firepower</div></div>`;
+
+  document.getElementById("sv-body").innerHTML = flexRows.length
+    ? flexRows.map(r=>`<tr>
+        <td>${r.label}</td>
+        <td class="num">${gbp(r.plan)}</td>
+        <td class="num">${r.act>0?gbp(r.act):'<span style="color:var(--ink-faint)">—</span>'}</td>
+        <td class="num diff ${r.avoided>0?'under':'flat'}">${r.act>0?(r.avoided>0?'+'+gbp(r.avoided):'±£0'):'—'}</td>
+      </tr>`).join("")
+    : `<tr><td colspan="4" class="empty">No discretionary lines in the plan.</td></tr>`;
+
+  document.getElementById("sv-foot").innerHTML =
+    `<tr><td>Total reclaimed</td><td class="num">${gbp(totPlan)}</td><td class="num">${gbp(totAct)}</td><td class="num diff under">${anyActual?'+'+gbp(totAvoided):'—'}</td></tr>`;
+}
+
+/* ---------------- EXPORT ---------------- */
+function exportCSV(){
+  const rows = [["Section","Month","Category","Type","Planned (GBP)","Actual (GBP)","Difference (GBP)"]];
+  state.months.forEach(m=>{
+    m.cats.forEach(c=>{
+      const plan=Number(c.plan)||0, act=Number(c.actual)||0;
+      rows.push(["Budget", m.name, c.name, c.type, plan, act, plan-act]);
+    });
+    const mp=monthPlan(m), ma=monthActual(m);
+    rows.push(["Month total", m.name, "TOTAL OUT", "", mp, ma, mp-ma]);
+    rows.push(["Month total", m.name, "LEFT OVER", "", m.income-mp, m.income-ma, ""]);
+  });
+  rows.push([]);
+  rows.push(["Weekly log"]);
+  rows.push(["Week","Month","Category","Note","Amount (GBP)","Logged"]);
+  [...state.log].sort((a,b)=>a.ts-b.ts).forEach(e=>{
+    const m=state.months[e.month];
+    const cat=m?.cats.find(c=>c.id===e.catId);
+    rows.push(["W"+e.week, m?m.name:"", cat?cat.name:"", e.note||"", Number(e.amount), new Date(e.ts).toISOString().slice(0,10)]);
+  });
+  const csv = rows.map(r=>r.map(cell=>{
+    const s = String(cell ?? "");
+    return /[",\n]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s;
+  }).join(",")).join("\n");
+  const blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "ledger_"+new Date().toISOString().slice(0,10)+".csv";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* ---------------- Tabs ---------------- */
+document.querySelectorAll("#tabs button").forEach(b=>{
+  b.onclick = ()=>{
+    document.querySelectorAll("#tabs button").forEach(x=>x.classList.remove("on"));
+    b.classList.add("on");
+    document.querySelectorAll(".panel").forEach(p=>p.classList.remove("show"));
+    document.getElementById("panel-"+b.dataset.tab).classList.add("show");
+  };
+});
+
+/* ---------------- Buttons ---------------- */
+document.getElementById("lg-add").onclick = addEntry;
+document.getElementById("lg-amt").addEventListener("keydown", e=>{ if(e.key==="Enter") addEntry(); });
+document.getElementById("export-csv").onclick = exportCSV;
+document.getElementById("reset-actuals").onclick = ()=>{
+  if(!confirm("Clear all actual spend and the weekly log? Your budget targets stay.")) return;
+  state.months.forEach(m=>m.cats.forEach(c=>c.actual=0));
+  state.log = []; state.logStartTs = null;
+  save(); renderAll();
+};
+document.getElementById("reset-all").onclick = ()=>{
+  if(!confirm("Reset the entire app back to the original plan? This wipes targets, actuals and the log.")) return;
+  state = structuredClone(DEFAULT);
+  state.months.forEach(m=>m.cats.forEach(c=>c.actual=0));
+  save(); renderControls(); renderAll();
+};
+
+/* ---------------- Boot ---------------- */
+function renderControls(){ renderLogControls(); }
+function renderAll(){ renderOverview(); renderMonth(); renderLog(); renderSaved(); }
+renderControls();
+renderAll();
+</script>
+</body>
+</html>
